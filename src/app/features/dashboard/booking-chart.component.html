@@ -1,0 +1,9 @@
+<div
+  #chart
+  class="chart-container"
+  role="img"
+  aria-label="Monthly billed amounts. A data table follows this chart."
+></div>
+@if (failed()) {
+  <p class="form-note text-center">Chart could not load. Use the data table below.</p>
+}

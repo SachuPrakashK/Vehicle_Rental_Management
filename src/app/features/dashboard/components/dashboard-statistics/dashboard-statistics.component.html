@@ -1,0 +1,32 @@
+<div class="stats-grid">
+  <div class="stat-card primary">
+    <div class="stat-top">
+      Total vehicles<span class="stat-icon"><app-icon name="vehicle" /></span>
+    </div>
+    <div class="stat-value">{{ vehicleCount() | number }}</div>
+    <div class="stat-foot">Vehicles in your fleet</div>
+  </div>
+  <div class="stat-card secondary">
+    <div class="stat-top">
+      Total bookings<span class="stat-icon"><app-icon name="booking" /></span>
+    </div>
+    <div class="stat-value">{{ data().totalBookings | number }}</div>
+    <div class="stat-foot">Bookings across your business</div>
+  </div>
+  <div class="stat-card yellow">
+    <div class="stat-top">
+      Total customers<span class="stat-icon"><app-icon name="customer" /></span>
+    </div>
+    <div class="stat-value">{{ data().totalCustomers | number }}</div>
+    <div class="stat-foot">Customers in your directory</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-top">
+      Total billed amount<span class="stat-icon"><app-icon name="money" /></span>
+    </div>
+    <div class="stat-value">
+      {{ data().totalAmount | currency: currency() : 'symbol' : '1.0-0' }}
+    </div>
+    <div class="stat-foot">Total billed amount</div>
+  </div>
+</div>

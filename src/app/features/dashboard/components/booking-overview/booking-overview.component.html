@@ -1,0 +1,40 @@
+<app-data-modal
+  [open]="dataModalOpen()"
+  title="Booking overview"
+  [columns]="modalColumns"
+  [rows]="modalRows()"
+  [currency]="currency()"
+  (closed)="dataModalOpen.set(false)"
+/>
+<app-custom-period-modal
+  [open]="customPeriodOpen()"
+  [initialRange]="customRange()"
+  (applied)="applyCustomPeriod($event)"
+  (closed)="customPeriodOpen.set(false)"
+/>
+<section class="card">
+  <div class="card-heading">
+    <div>
+      <h2>Booking overview</h2>
+      <p>Billed amounts and bookings for {{ periodLabel().toLowerCase() }}</p>
+    </div>
+    <div class="chart-heading-actions">
+      <label class="field compact-field">
+        <select
+          #periodSelect
+          aria-label="Booking overview period"
+          [value]="period()"
+          (change)="changePeriod(periodSelect)"
+        >
+          @for (option of periodOptions; track option.value) {
+            <option [value]="option.value" [selected]="option.value === period()">
+              {{ option.label }}
+            </option>
+          }
+        </select>
+      </label>
+      <button type="button" class="button" (click)="dataModalOpen.set(true)">View data</button>
+    </div>
+  </div>
+  <app-booking-chart [data]="chartData()" />
+</section>

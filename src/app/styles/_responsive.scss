@@ -1,0 +1,248 @@
+@media (min-width: 1600px) {
+  .auth-story {
+    padding-left: 15%;
+    padding-right: 15%;
+  }
+}
+@media (max-width: 1150px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-grid,
+  .booking-grid {
+    grid-template-columns: 1fr;
+  }
+  .quick-actions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .quick-action {
+    align-items: flex-start;
+    padding: 12px;
+  }
+  .quick-action > app-icon:last-child {
+    display: none;
+  }
+  .profile-grid {
+    grid-template-columns: 240px 1fr;
+  }
+  .topbar {
+    padding: 0 24px;
+  }
+  main {
+    padding: 22px 24px;
+  }
+  .auth-story h1 {
+    font-size: 33px;
+  }
+}
+@media (max-width: 850px) {
+  .app-shell,
+  .app-shell.collapsed {
+    --sidebar-width: 0px;
+  }
+  .sidebar,
+  .collapsed .sidebar {
+    width: 236px;
+    transform: translateX(-100%);
+    transition: transform 0.2s;
+  }
+  .mobile-open .sidebar {
+    transform: translateX(0);
+  }
+  .mobile-open .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 39;
+    border: 0;
+  }
+  .collapsed .nav-label,
+  .collapsed .sidebar-section,
+  .collapsed .sidebar-footer-copy {
+    display: block;
+  }
+  .collapsed .sidebar-nav {
+    margin-top: 0;
+  }
+  .sidebar-brand,
+  .collapsed .sidebar-brand {
+    padding: 0 26px;
+  }
+  .topbar {
+    height: 68px;
+  }
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  .auth-story {
+    padding: clamp(24px, 4vh, 35px) 8%;
+  }
+  .auth-story h1 {
+    font-size: 28px;
+  }
+  .auth-form-side {
+    padding: 40px 25px;
+  }
+}
+@media (max-width: 600px) {
+  main {
+    padding: 20px 16px;
+  }
+  .topbar {
+    padding: 0 16px;
+  }
+  .topbar-left,
+  .topbar-right {
+    gap: 9px;
+  }
+  .topbar .badge,
+  .profile-toggle .profile-name {
+    display: none;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .heading-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .stats-grid {
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .stat-card {
+    padding: 15px;
+  }
+  .stat-value {
+    font-size: 25px;
+  }
+  .stat-top {
+    font-size: 10px;
+    align-items: flex-start;
+  }
+  .stat-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .stat-icon app-icon {
+    width: 17px;
+    height: 17px;
+  }
+  .dashboard-grid {
+    gap: 16px;
+  }
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+  .card-heading,
+  .card-body {
+    padding: 20px;
+  }
+  .card-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .chart-heading-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .chart-heading-actions .compact-field {
+    flex: 1 1 170px;
+  }
+  .chart-heading-actions .compact-field select {
+    min-width: 0;
+  }
+  .toolbar,
+  .toolbar-left,
+  .toolbar-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .toolbar-filters {
+    width: 100%;
+    margin-left: 0;
+  }
+  .toolbar-filters .select-control {
+    width: 100%;
+  }
+  .search-field {
+    min-width: 0;
+  }
+  .toolbar .select-control {
+    width: 100%;
+  }
+  .pagination {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 15px;
+  }
+  .pagination > div {
+    width: 100%;
+    justify-content: space-between;
+    gap: 7px;
+  }
+  .form-grid,
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  .span-2 {
+    grid-column: auto;
+  }
+  .drawer-header,
+  .drawer-content {
+    padding: 22px;
+  }
+  .drawer-footer {
+    padding: 16px 22px;
+  }
+  .public-banner {
+    padding: 8px 16px;
+  }
+  .page-footer {
+    gap: 15px;
+    flex-direction: column;
+  }
+  .auth-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .auth-story {
+    display: none;
+  }
+  .auth-form-side {
+    min-height: 100dvh;
+    padding: 30px 24px;
+    overflow: visible;
+  }
+  .auth-mobile-logo {
+    display: block;
+    margin-bottom: 35px;
+    width: 150px;
+  }
+  .auth-form-container h1 {
+    font-size: 26px;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  .chart-container {
+    height: 240px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .spinner {
+    animation: spin 2s linear infinite;
+  }
+}

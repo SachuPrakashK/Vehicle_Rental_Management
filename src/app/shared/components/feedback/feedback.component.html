@@ -1,0 +1,38 @@
+@if (feedback.loading()) {
+  <div class="global-loader" role="progressbar" aria-label="Loading requests"><span></span></div>
+}
+<div class="toast-stack" aria-live="polite" aria-atomic="false">
+  @for (toast of feedback.toasts(); track toast.id) {
+    <div
+      [class]="'toast toast-' + toast.kind"
+      [attr.role]="toast.kind === 'error' ? 'alert' : 'status'"
+    >
+      <app-icon [name]="toast.kind" /><span>{{ toast.message }}</span
+      ><button
+        class="icon-button"
+        aria-label="Dismiss notification"
+        (click)="feedback.dismiss(toast.id)"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+  }
+</div>
+<dialog
+  #dialog
+  class="confirmation"
+  aria-labelledby="confirmation-title"
+  (cancel)="$event.preventDefault(); feedback.answer(false)"
+>
+  @if (feedback.confirmation(); as confirmation) {
+    <div class="modal-icon"><app-icon name="warning" /></div>
+    <h2 id="confirmation-title">{{ confirmation.title }}</h2>
+    <p>{{ confirmation.message }}</p>
+    <div class="form-actions">
+      <button class="button secondary" autofocus (click)="feedback.answer(false)">Cancel</button
+      ><button class="button danger" (click)="feedback.answer(true)">
+        {{ confirmation.action }}
+      </button>
+    </div>
+  }
+</dialog>

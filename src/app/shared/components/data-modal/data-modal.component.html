@@ -1,0 +1,41 @@
+<app-modal [open]="open()" [title]="title()" closeLabel="Close data" (closed)="close()">
+  @if (rows().length) {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            @for (column of columns(); track column.key) {
+              <th>{{ column.label }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track $index) {
+            <tr>
+              @for (column of columns(); track column.key) {
+                <td>
+                  @if (column.format === 'currency') {
+                    {{ row[column.key] | currency: currency() }}
+                  } @else if (column.format === 'number') {
+                    {{ row[column.key] | number }}
+                  } @else {
+                    {{ row[column.key] }}
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <div class="empty-illustration"><app-icon name="search" /></div>
+      <h3>No data found</h3>
+      <p>No chart data is available for the selected period.</p>
+    </div>
+  }
+  <div modal-footer class="modal-footer">
+    <button type="button" class="button secondary" (click)="close()">Close</button>
+  </div>
+</app-modal>

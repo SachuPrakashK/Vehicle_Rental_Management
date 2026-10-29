@@ -1,0 +1,173 @@
+﻿<app-page-header title="Admin users" description="Manage accounts, roles, and access."
+  ><button class="button" (click)="edit()"><app-icon name="add" />Add user</button></app-page-header
+>
+<section class="card">
+  <div class="toolbar">
+    <app-search
+      [value]="list.search()"
+      label="Search admin users"
+      (valueChange)="list.searchFor($event)"
+    />
+  </div>
+  @if (list.loading()) {
+    <div class="loading-state"><span class="spinner"></span>Loading users&hellip;</div>
+  } @else if (list.error()) {
+    <div class="error-state" role="alert">{{ list.error() }}</div>
+  } @else if (!list.filtered().length) {
+    <app-empty-state
+      description="No admin users match this search."
+      actionLabel="Add user"
+      (action)="edit()"
+    />
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <caption class="sr-only">
+          Admin users
+        </caption>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of list.visible(); track user.id) {
+            <tr>
+              <td>{{ user.firstName }} {{ user.lastName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phone || 'Not provided' }}</td>
+              <td>
+                <span class="badge neutral">{{ user.role }}</span>
+              </td>
+              <td>
+                <span [class]="user.isActive ? 'badge' : 'badge neutral'">{{
+                  user.isActive ? 'Active' : 'Inactive'
+                }}</span>
+              </td>
+              <td>
+                <app-action-menu
+                  [label]="'Actions for ' + user.firstName"
+                  [items]="rowActions"
+                  [disabled]="!!deleting()"
+                  (selected)="userAction($event, user)"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [total]="list.filtered().length"
+      [page]="list.currentPage()"
+      (changed)="list.page.set($event)"
+    />
+  }
+</section>
+<app-drawer
+  [open]="open()"
+  [title]="viewing() ? 'User details' : selected() ? 'Edit user' : 'Add user'"
+  [dirty]="!viewing() && form.dirty"
+  [busy]="busy()"
+  (closed)="open.set(false)"
+>
+  @if (viewing()) {
+    @if (selected(); as user) {
+      <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+      <dl class="details-grid">
+        <div>
+          <dt>Email</dt>
+          <dd>{{ user.email }}</dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd>{{ user.phone || 'Not provided' }}</dd>
+        </div>
+        <div>
+          <dt>Role</dt>
+          <dd>{{ user.role }}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{{ user.isActive ? 'Active' : 'Inactive' }}</dd>
+        </div>
+      </dl>
+    }
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="admin-first">First name <span class="required">*</span></label
+          ><input
+            id="admin-first"
+            formControlName="firstName"
+            placeholder="Enter first name"
+          /><app-field-error [control]="form.controls.firstName" />
+        </div>
+        <div class="field">
+          <label for="admin-last">Last name <span class="required">*</span></label
+          ><input
+            id="admin-last"
+            formControlName="lastName"
+            placeholder="Enter last name"
+          /><app-field-error [control]="form.controls.lastName" />
+        </div>
+        <div class="field span-2">
+          <label for="admin-email">Email <span class="required">*</span></label
+          ><input
+            id="admin-email"
+            type="email"
+            formControlName="email"
+            placeholder="Enter email address"
+          /><app-field-error [control]="form.controls.email" />
+        </div>
+        <div class="field">
+          <label for="admin-phone">Phone</label
+          ><input
+            id="admin-phone"
+            type="tel"
+            maxlength="10"
+            formControlName="phone"
+            placeholder="Enter phone number"
+          /><app-field-error [control]="form.controls.phone" />
+        </div>
+        <div class="field">
+          <label for="admin-role">Role <span class="required">*</span></label
+          ><select id="admin-role" formControlName="role">
+            <option value="STAFF">Staff</option>
+            <option value="ADMIN">Admin</option>
+            <option value="SUPER_ADMIN">Super Admin</option>
+          </select>
+        </div>
+        @if (!selected()) {
+          <div class="field span-2">
+            <label for="admin-password">Temporary password <span class="required">*</span></label
+            ><input
+              id="admin-password"
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+              placeholder="Enter temporary password"
+            /><app-field-error [control]="form.controls.password" />
+          </div>
+        }
+        <label class="checkbox-label span-2"
+          ><input type="checkbox" formControlName="isActive" /> Active account</label
+        >
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="button" [disabled]="form.invalid || busy()">
+          @if (busy()) {
+            <span class="spinner"></span>
+          }
+          {{ selected() ? 'Save changes' : 'Create user' }}
+        </button>
+      </div>
+    </form>
+  }
+</app-drawer>

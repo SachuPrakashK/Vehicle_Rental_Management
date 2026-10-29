@@ -1,0 +1,144 @@
+﻿<app-page-header
+  title="Customer ledger"
+  description="A clear record of every customer's bookings."
+  back="/customers"
+/>
+<section class="card">
+  <div class="toolbar">
+    <app-search
+      [value]="search()"
+      label="Search ledger customers"
+      (valueChange)="search.set($event)"
+    />
+    <select
+      #customerSelect
+      class="select-control"
+      aria-label="Select customer for ledger"
+      [value]="selectedId()"
+      [disabled]="loading() || list.loading()"
+      (change)="select(+customerSelect.value)"
+    >
+      <option value="0">Select a customer</option>
+      @for (customer of matches(); track customer.customerId) {
+        <option [value]="customer.customerId">
+          {{ customer.customerName }} &middot; #{{ customer.customerId }}
+        </option>
+      }
+    </select>
+  </div>
+</section>
+@if (loading()) {
+  <div class="loading-state" role="status">
+    <span class="spinner"></span>Loading customers&hellip;
+  </div>
+} @else if (error()) {
+  <div class="error-state" role="alert">
+    <p>{{ error() }}</p>
+    <button class="button secondary" (click)="load()">Try again</button>
+  </div>
+} @else if (customer(); as customer) {
+  <section class="card mt-24">
+    <div class="card-body">
+      <div class="row">
+        <span class="avatar">{{ customer.customerName.slice(0, 1).toUpperCase() }}</span>
+        <div>
+          <h2>{{ customer.customerName }}</h2>
+          <span class="muted">Customer #{{ customer.customerId }}</span>
+        </div>
+      </div>
+      <dl class="details-grid">
+        <div>
+          <dt>Email</dt>
+          <dd>{{ customer.email || 'Not provided' }}</dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd>{{ customer.mobileNo || 'Not provided' }}</dd>
+        </div>
+        <div>
+          <dt>City</dt>
+          <dd>{{ customer.customerCity || 'Not provided' }}</dd>
+        </div>
+        <div>
+          <dt>Total billed amount</dt>
+          <dd>
+            {{ list.loading() || list.error() ? 'Unavailable' : (total() | currency: currency) }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+  <section class="card mt-24">
+    <div class="card-heading">
+      <div>
+        <h2>Booking history</h2>
+        <p>Records returned for this customer's ID</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <app-search
+        [value]="list.search()"
+        label="Search customer bookings"
+        (valueChange)="list.searchFor($event)"
+      />
+    </div>
+    @if (list.loading()) {
+      <div class="loading-state" role="status">
+        <span class="spinner"></span>Loading history&hellip;
+      </div>
+    } @else if (list.error()) {
+      <div class="error-state" role="alert">
+        <p>{{ list.error() }}</p>
+        <button class="button secondary" (click)="list.load()">Try again</button>
+      </div>
+    } @else if (!list.filtered().length) {
+      <app-empty-state description="No bookings match this customer and search." />
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <caption class="sr-only">
+            Customer booking history
+          </caption>
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Vehicle</th>
+              <th>Booking date</th>
+              <th>Billed amount</th>
+              <th>Recorded discount</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (booking of list.visible(); track booking.bookingId) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/bookings']" [queryParams]="{ view: booking.bookingId }">{{
+                    booking.bookingUid || '#' + booking.bookingId
+                  }}</a>
+                </td>
+                <td>{{ booking.brand || 'Not provided' }} {{ booking.model }}</td>
+                <td>{{ booking.bookingDate | date: 'dd MMM yyyy' }}</td>
+                <td>{{ booking.totalBillAmount | currency: currency }}</td>
+                <td>{{ booking.discount }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination
+        [total]="list.filtered().length"
+        [page]="list.currentPage()"
+        (changed)="list.page.set($event)"
+      />
+    }
+  </section>
+  <p class="form-note">
+    This is booking history, not a payment statement. Payments, balances, return dates, and rental
+    status are not tracked here.
+  </p>
+} @else {
+  <app-empty-state
+    title="Choose a customer"
+    description="Select a customer to review their booking history and billed amounts."
+  />
+}

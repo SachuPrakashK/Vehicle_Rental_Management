@@ -1,0 +1,87 @@
+<app-auth-layout
+  title="Create your account"
+  description="Start building a more organized rental business."
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="form-grid">
+      <div class="field">
+        <label for="first-name">First name <span class="required">*</span></label>
+        <input
+          id="first-name"
+          formControlName="firstName"
+          autocomplete="given-name"
+          placeholder="Enter first name"
+        />
+        <app-field-error [control]="form.controls.firstName" />
+      </div>
+      <div class="field">
+        <label for="last-name">Last name <span class="required">*</span></label>
+        <input
+          id="last-name"
+          formControlName="lastName"
+          autocomplete="family-name"
+          placeholder="Enter last name"
+        />
+        <app-field-error [control]="form.controls.lastName" />
+      </div>
+    </div>
+    <div class="field">
+      <label for="auth-email">Email address <span class="required">*</span></label>
+      <input
+        id="auth-email"
+        formControlName="email"
+        type="email"
+        autocomplete="email"
+        placeholder="Enter email address"
+      />
+      <app-field-error [control]="form.controls.email" />
+    </div>
+    <div class="field">
+      <label for="auth-phone">Mobile number</label>
+      <input
+        id="auth-phone"
+        formControlName="phone"
+        type="tel"
+        autocomplete="tel-national"
+        maxlength="10"
+        placeholder="Enter phone number"
+      />
+      <app-field-error [control]="form.controls.phone" />
+    </div>
+    <app-password-field
+      [control]="form.controls.password"
+      inputId="auth-password"
+      label="Password"
+      placeholder="Enter password"
+      autocomplete="new-password"
+    />
+    <app-password-field
+      [control]="form.controls.confirmPassword"
+      inputId="auth-confirm"
+      label="Confirm password"
+      placeholder="Re-enter password"
+      autocomplete="new-password"
+    />
+    @if (form.hasError('passwordMismatch') && form.controls.confirmPassword.touched) {
+      <small class="field-error">Passwords must match.</small>
+    }
+    <p class="form-note">
+      Use 8+ characters with uppercase, lowercase, number, and special character.
+    </p>
+    @if (error()) {
+      <div class="field-error" role="alert">{{ error() }}</div>
+    }
+    <button
+      type="submit"
+      class="button full"
+      [disabled]="form.invalid || busy()"
+      aria-label="Create account"
+    >
+      @if (busy()) {
+        <span class="spinner"></span>
+      }
+      Create account <app-icon name="arrow" />
+    </button>
+  </form>
+  <div class="auth-links"><a routerLink="/auth/login">Back to sign in</a></div>
+</app-auth-layout>

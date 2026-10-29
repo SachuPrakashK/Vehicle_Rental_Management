@@ -1,0 +1,25 @@
+<dialog
+  #dialog
+  class="drawer"
+  aria-labelledby="drawer-title"
+  (cancel)="$event.preventDefault(); close()"
+  (click)="backdrop($event)"
+>
+  <header class="drawer-header">
+    <div>
+      <span class="eyebrow">FLEETLINE</span>
+      <h2 id="drawer-title">{{ title() }}</h2>
+    </div>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Close panel"
+      [disabled]="busy()"
+      (click)="close()"
+    >
+      <app-icon name="close" />
+    </button>
+  </header>
+  <ng-content select="[drawer-footer]" />
+  <div class="drawer-content"><ng-content /></div>
+</dialog>

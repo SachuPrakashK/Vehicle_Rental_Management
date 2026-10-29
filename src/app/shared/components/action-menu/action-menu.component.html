@@ -1,0 +1,32 @@
+<button
+  #trigger
+  type="button"
+  class="icon-button"
+  [attr.aria-label]="label()"
+  aria-haspopup="menu"
+  [attr.aria-expanded]="open()"
+  [disabled]="disabled()"
+  (click)="toggle()"
+>
+  <app-icon name="moreVertical" />
+</button>
+@if (open()) {
+  <div
+    class="action-menu"
+    role="menu"
+    [style.top.px]="position().top"
+    [style.left.px]="position().left"
+  >
+    @for (item of items(); track item.id) {
+      <button
+        type="button"
+        role="menuitem"
+        [class.destructive]="item.destructive"
+        (click)="choose(item.id)"
+      >
+        <app-icon [name]="item.icon" />
+        {{ item.label }}
+      </button>
+    }
+  </div>
+}

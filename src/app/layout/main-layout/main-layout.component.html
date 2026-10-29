@@ -1,0 +1,116 @@
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<div class="app-shell" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
+  <button
+    type="button"
+    class="mobile-overlay"
+    aria-label="Close navigation"
+    (click)="closeMobileNavigation()"
+  ></button>
+
+  <aside id="main-navigation" class="sidebar" aria-label="Main navigation">
+    <a routerLink="/dashboard" class="sidebar-brand" aria-label="Fleetline dashboard">
+      <img [src]="collapsed() && !mobileOpen() ? 'logo-short.svg' : 'logo.svg'" alt="Fleetline" />
+    </a>
+
+    <nav>
+      @for (item of navigation; track item.path) {
+        @if (!item.superAdmin || auth.isSuperAdmin()) {
+          <div class="sidebar-nav">
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              ariaCurrentWhenActive="page"
+              [attr.title]="item.label"
+            >
+              <app-icon [name]="item.icon"></app-icon>
+              <span class="nav-label">{{ item.label }}</span>
+            </a>
+          </div>
+        }
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">
+        <app-icon name="vehicle"></app-icon>
+      </div>
+      <div class="sidebar-footer-copy">
+        Fleetline management
+        <small>Everything in its place.</small>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button
+          type="button"
+          class="icon-button"
+          aria-label="Toggle navigation"
+          aria-controls="main-navigation"
+          [attr.aria-expanded]="mobileOpen() || !collapsed()"
+          (click)="toggleSidebar()"
+        >
+          <app-icon name="menu"></app-icon>
+        </button>
+
+        <div class="header-label">
+          Rental management
+          <small>Your business, connected</small>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <span class="badge">
+          <app-icon name="vehicle"></app-icon>
+          Fleet management
+        </span>
+
+        <div class="profile-menu">
+          <button
+            type="button"
+            class="profile-toggle"
+            aria-label="Open profile menu"
+            aria-controls="profile-menu"
+            [attr.aria-expanded]="profileOpen()"
+            (click)="toggleProfileMenu()"
+          >
+            <span class="avatar">
+              <app-icon name="user"></app-icon>
+            </span>
+            <span class="profile-name">
+              {{ auth.user()?.firstName }} {{ auth.user()?.lastName }}
+              <small>{{ auth.user()?.role }}</small>
+            </span>
+            <app-icon name="chevron"></app-icon>
+          </button>
+
+          @if (profileOpen()) {
+            <div id="profile-menu" class="dropdown">
+              <a routerLink="/profile">
+                <app-icon name="user"></app-icon>
+                My profile
+              </a>
+              <button type="button" (click)="signOut()">
+                <app-icon name="logout"></app-icon>
+                Sign out
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <router-outlet></router-outlet>
+
+      <footer class="page-footer">
+        <span>Fleetline &middot; Vehicle rental management</span>
+        <span>Thoughtfully organized. Ready for the road.</span>
+      </footer>
+    </main>
+  </div>
+</div>

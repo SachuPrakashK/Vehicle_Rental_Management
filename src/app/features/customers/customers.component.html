@@ -1,0 +1,132 @@
+﻿<app-page-header
+  title="Customers"
+  description="Good relationships begin with keeping the details together."
+  ><button class="button" (click)="edit()">
+    <app-icon name="add" />Add customer
+  </button></app-page-header
+>
+<section class="card">
+  <div class="toolbar">
+    <app-search
+      [value]="list.search()"
+      label="Search customers"
+      (valueChange)="list.searchFor($event)"
+    />
+  </div>
+  @if (list.loading()) {
+    <div class="loading-state" role="status">
+      <span class="spinner"></span>Loading customers&hellip;
+    </div>
+  } @else if (list.error()) {
+    <div class="error-state" role="alert">
+      <p>{{ list.error() }}</p>
+      <button class="button secondary" (click)="list.load()">Try again</button>
+    </div>
+  } @else if (!list.filtered().length) {
+    <app-empty-state
+      description="Add a customer or try a different search."
+      actionLabel="Add customer"
+      (action)="edit()"
+    />
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <caption class="sr-only">
+          Customer directory
+        </caption>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Email address</th>
+            <th>Mobile number</th>
+            <th>City</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (customer of list.visible(); track customer.customerId) {
+            <tr
+              class="clickable-row"
+              tabindex="0"
+              [attr.aria-label]="'View details for ' + customer.customerName"
+              (click)="viewCustomer(customer)"
+              (keydown.enter)="viewCustomer(customer, $event)"
+              (keydown.space)="viewCustomer(customer, $event)"
+            >
+              <td>
+                <div class="vehicle-cell">
+                  <span class="avatar">{{ customer.customerName.slice(0, 1).toUpperCase() }}</span>
+                  <div class="table-main">
+                    {{ customer.customerName
+                    }}<span class="subtext">Customer #{{ customer.customerId }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ customer.email || 'Not provided' }}</td>
+              <td>{{ customer.mobileNo || 'Not provided' }}</td>
+              <td>{{ customer.customerCity || 'Not provided' }}</td>
+              <td (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                <app-action-menu
+                  [label]="'Actions for ' + customer.customerName"
+                  [items]="rowActions"
+                  [disabled]="deleting() !== null"
+                  (selected)="customerAction($event, customer)"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [total]="list.filtered().length"
+      [page]="list.currentPage()"
+      (changed)="list.page.set($event)"
+    />
+  }
+</section>
+<app-drawer
+  [open]="open()"
+  [title]="viewing() ? 'Customer details' : selected() ? 'Edit customer' : 'Add customer'"
+  [dirty]="!!customerForm()?.form?.dirty"
+  [busy]="busy()"
+  (closed)="closeDrawer()"
+>
+  @if (open()) {
+    @if (viewing()) {
+      @if (selected(); as customer) {
+        <h2>{{ customer.customerName }}</h2>
+        <dl class="details-grid">
+          <div>
+            <dt>Email</dt>
+            <dd>{{ customer.email || 'Not provided' }}</dd>
+          </div>
+          <div>
+            <dt>Mobile</dt>
+            <dd>{{ customer.mobileNo || 'Not provided' }}</dd>
+          </div>
+          <div>
+            <dt>City</dt>
+            <dd>{{ customer.customerCity || 'Not provided' }}</dd>
+          </div>
+          <div>
+            <dt>Customer ID</dt>
+            <dd>{{ customer.customerId }}</dd>
+          </div>
+        </dl>
+        <a
+          class="button"
+          [routerLink]="['/customer-ledger']"
+          [queryParams]="{ customer: customer.customerId }"
+          >View customer ledger</a
+        >
+      }
+    } @else {
+      <app-customer-form
+        [customer]="selected()"
+        (saved)="saved()"
+        (busyChange)="busy.set($event)"
+      />
+    }
+  }
+</app-drawer>

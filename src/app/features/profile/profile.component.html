@@ -1,0 +1,174 @@
+﻿<app-page-header title="My profile" description="Keep your account details and security current." />
+<div class="profile-grid">
+  <section class="card profile-card">
+    <div class="card-body">
+      @if (service.imageUrl(service.profile()?.profileImage ?? null); as image) {
+        <img class="profile-photo" [src]="image" alt="Your profile" />
+      } @else {
+        <div class="profile-photo"><app-icon name="user" /></div>
+      }
+      <h2>{{ service.profile()?.firstName }} {{ service.profile()?.lastName }}</h2>
+      <p class="form-note">{{ service.profile()?.role }}</p>
+      <input
+        #file
+        class="sr-only"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        aria-label="Choose profile image"
+        [disabled]="imageBusy()"
+        (change)="upload($event)"
+      />
+      <div class="profile-image-actions">
+        <button
+          type="button"
+          class="button secondary small"
+          [disabled]="imageBusy()"
+          (click)="file.click()"
+        >
+          @if (imageBusy()) {
+            <span class="spinner"></span>
+          } @else {
+            <app-icon name="upload" />
+          }
+          Change image
+        </button>
+        @if (service.profile()?.profileImage) {
+          <button
+            type="button"
+            class="icon-button destructive"
+            aria-label="Delete profile image"
+            [disabled]="imageBusy()"
+            (click)="deleteImage()"
+          >
+            <app-icon name="delete" />
+          </button>
+        }
+      </div>
+      <p class="form-note">JPG, PNG or WebP &middot; Maximum 5 MB</p>
+    </div>
+  </section>
+  <div class="stack">
+    <section class="card">
+      <div class="card-heading">
+        <div>
+          <h2>Personal information</h2>
+          <p>Update your account profile.</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="profile-first">First name <span class="required">*</span></label
+              ><input
+                id="profile-first"
+                formControlName="firstName"
+                autocomplete="given-name"
+                placeholder="Enter first name"
+              /><app-field-error [control]="form.controls.firstName" />
+            </div>
+            <div class="field">
+              <label for="profile-last">Last name <span class="required">*</span></label
+              ><input
+                id="profile-last"
+                formControlName="lastName"
+                autocomplete="family-name"
+                placeholder="Enter last name"
+              /><app-field-error [control]="form.controls.lastName" />
+            </div>
+            <div class="field">
+              <label for="profile-email">Email</label
+              ><input
+                id="profile-email"
+                formControlName="email"
+                type="email"
+                placeholder="Enter email address"
+              />
+            </div>
+            <div class="field">
+              <label for="profile-phone">Mobile number</label
+              ><input
+                id="profile-phone"
+                formControlName="phone"
+                type="tel"
+                maxlength="10"
+                placeholder="Enter phone number"
+              /><app-field-error [control]="form.controls.phone" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button" [disabled]="form.invalid || saving()">
+              @if (saving()) {
+                <span class="spinner"></span>
+              }
+              Save profile
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-heading">
+        <div>
+          <h2>Change password</h2>
+          <p>Changing your password signs out all active sessions.</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate>
+          <div class="form-grid">
+            <div class="field span-2">
+              <label for="current-password">Current password <span class="required">*</span></label
+              ><input
+                id="current-password"
+                type="password"
+                formControlName="currentPassword"
+                autocomplete="current-password"
+                placeholder="Enter current password"
+              /><app-field-error [control]="passwordForm.controls.currentPassword" />
+            </div>
+            <div class="field">
+              <label for="new-password">New password <span class="required">*</span></label
+              ><input
+                id="new-password"
+                type="password"
+                formControlName="password"
+                autocomplete="new-password"
+                placeholder="Enter new password"
+              /><app-field-error [control]="passwordForm.controls.password" />
+            </div>
+            <div class="field">
+              <label for="confirm-new-password"
+                >Confirm password <span class="required">*</span></label
+              ><input
+                id="confirm-new-password"
+                type="password"
+                formControlName="confirmPassword"
+                autocomplete="new-password"
+                placeholder="Re-enter new password"
+              /><app-field-error [control]="passwordForm.controls.confirmPassword" />
+            </div>
+            @if (
+              passwordForm.hasError('passwordMismatch') &&
+              passwordForm.controls.confirmPassword.touched
+            ) {
+              <small class="field-error span-2">Passwords must match.</small>
+            }
+          </div>
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="button"
+              [disabled]="passwordForm.invalid || passwordBusy()"
+            >
+              @if (passwordBusy()) {
+                <span class="spinner"></span>
+              }
+              Change password
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
