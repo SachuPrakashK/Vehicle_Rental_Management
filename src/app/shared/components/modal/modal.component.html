@@ -1,0 +1,15 @@
+<dialog
+  #dialog
+  class="data-modal"
+  [class.compact]="compact()"
+  (cancel)="$event.preventDefault(); close()"
+>
+  <div class="modal-heading">
+    <h2>{{ title() }}</h2>
+    <button type="button" class="icon-button" [attr.aria-label]="closeLabel()" (click)="close()">
+      <app-icon name="close" />
+    </button>
+  </div>
+  <div class="modal-content"><ng-content /></div>
+  <ng-content select="[modal-footer]" />
+</dialog>

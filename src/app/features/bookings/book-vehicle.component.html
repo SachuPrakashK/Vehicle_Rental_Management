@@ -1,0 +1,193 @@
+﻿<app-page-header
+  title="Book a vehicle"
+  description="The next journey starts here."
+  back="/bookings"
+/>
+@if (loading()) {
+  <div class="card loading-state" role="status">
+    <span class="spinner"></span>Loading customers and vehicles&hellip;
+  </div>
+} @else if (error()) {
+  <div class="card error-state" role="alert">
+    <p>{{ error() }}</p>
+    <button class="button secondary" (click)="load()">Try again</button>
+  </div>
+} @else {
+  <div class="booking-grid">
+    <section class="card">
+      <div class="card-heading">
+        <div>
+          <h2>Booking details</h2>
+          <p>Select your customer, vehicle, and rental information.</p>
+        </div>
+        <app-icon name="bookVehicle" />
+      </div>
+      <div class="card-body">
+        <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <h3>01 &middot; Customer</h3>
+          <app-search
+            class="mt-24"
+            [value]="customerSearch()"
+            label="Search customer options"
+            (valueChange)="customerSearch.set($event)"
+          />
+          <div class="field mt-24">
+            <label for="booking-customer">Select customer <span class="required">*</span></label
+            ><select id="booking-customer" formControlName="customerId">
+              <option [ngValue]="0">Select customer</option>
+              @for (customer of filteredCustomers(); track customer.customerId) {
+                <option [ngValue]="customer.customerId">
+                  {{ customer.customerName }} &middot;
+                  {{ customer.mobileNo || customer.email || '#' + customer.customerId }}
+                </option>
+              }</select
+            ><app-field-error [control]="form.controls.customerId" />
+          </div>
+          <button class="button small mt-24" type="button" (click)="drawerOpen.set(true)">
+            <app-icon name="add" />New customer
+          </button>
+          @if (customer(); as selected) {
+            <div class="notice info mt-24">
+              <app-icon name="customer" />
+              <p>
+                {{ selected.customerName }}<br />{{
+                  selected.email || 'Email missing — update this customer before booking.'
+                }}<br />{{ selected.mobileNo || 'No phone number' }}
+              </p>
+            </div>
+          }
+          <hr />
+          <h3>02 &middot; Vehicle & dates</h3>
+          <div class="form-grid mt-24">
+            <div class="field span-2">
+              <label for="booking-vehicle">Vehicle <span class="required">*</span></label
+              ><select id="booking-vehicle" formControlName="carId">
+                <option [ngValue]="0">Select vehicle</option>
+                @for (vehicle of vehicles(); track vehicle.carId) {
+                  <option [ngValue]="vehicle.carId">
+                    {{ vehicle.brand }} {{ vehicle.model }} · {{ vehicle.regNo }} ·
+                    {{ vehicle.vehicleType || 'CAR' }}
+                  </option>
+                }</select
+              ><app-field-error [control]="form.controls.carId" />
+            </div>
+            <div class="field">
+              <label for="booking-date">Booking date <span class="required">*</span></label
+              ><input id="booking-date" type="date" formControlName="bookingDate" /><app-field-error
+                [control]="form.controls.bookingDate"
+              />
+            </div>
+            <div class="field">
+              <label for="return-date">Planned return date <span class="required">*</span></label
+              ><input
+                id="return-date"
+                type="date"
+                formControlName="returnDate"
+                [min]="form.controls.bookingDate.value"
+              /><app-field-error [control]="form.controls.returnDate" />
+            </div>
+            @if (form.hasError('dateRange') && form.controls.returnDate.touched) {
+              <small class="field-error span-2" role="alert"
+                >Return date cannot be before the booking date.</small
+              >
+            }
+          </div>
+          <p class="form-note">
+            The planned return date validates this booking form but is not retained in booking
+            history. Verify availability with your team before booking.
+          </p>
+          <hr />
+          <h3>03 &middot; Billing details</h3>
+          <div class="form-grid mt-24">
+            <div class="field">
+              <label for="booking-total"
+                >Total bill amount (INR) <span class="required">*</span></label
+              ><input
+                id="booking-total"
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="totalBillAmount"
+                placeholder="Enter total bill amount"
+              /><app-field-error [control]="form.controls.totalBillAmount" />
+            </div>
+            <div class="field">
+              <label for="booking-discount">Discount <span class="required">*</span></label
+              ><input
+                id="booking-discount"
+                type="number"
+                min="0"
+                step="1"
+                formControlName="discount"
+                placeholder="Enter discount"
+              /><app-field-error [control]="form.controls.discount" />
+            </div>
+          </div>
+          <p class="form-note">
+            Enter the agreed final bill amount and recorded discount. Payment balances are not
+            calculated here.
+          </p>
+          <div class="form-actions">
+            <button
+              class="button"
+              type="submit"
+              [disabled]="form.invalid || busy() || customerBusy()"
+            >
+              @if (busy()) {
+                <span class="spinner"></span>
+              } @else {
+                <app-icon name="success" />
+              }
+              Create booking
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+    <aside class="stack">
+      <section class="card">
+        <div class="card-heading"><h2>Your booking at a glance</h2></div>
+        <div class="card-body">
+          <div class="summary-line">
+            <span class="muted">Customer</span
+            ><strong>{{ customer()?.customerName || 'Select customer' }}</strong>
+          </div>
+          <div class="summary-line">
+            <span class="muted">Vehicle</span
+            ><strong>{{ vehicle()?.model || 'Select vehicle' }}</strong>
+          </div>
+          @if (vehicle(); as selected) {
+            <div class="summary-line">
+              <span class="muted">Listed daily rate</span
+              ><span>{{ selected.dailyRate | currency: currency }}</span>
+            </div>
+          }
+          <div class="summary-line">
+            <span class="muted">Final bill amount</span
+            ><strong>{{ form.controls.totalBillAmount.value | currency: currency }}</strong>
+          </div>
+        </div>
+      </section>
+      <div class="notice info">
+        <app-icon name="info" />
+        <p>Customer contact details are copied into the booking record when you submit it.</p>
+      </div>
+    </aside>
+  </div>
+}
+<app-drawer
+  [open]="drawerOpen()"
+  title="New customer"
+  [dirty]="!!customerForm()?.form?.dirty"
+  [busy]="customerBusy()"
+  (closed)="drawerOpen.set(false)"
+>
+  @if (drawerOpen()) {
+    <p>Save this customer and continue your booking right here.</p>
+    <app-customer-form
+      [booking]="true"
+      (saved)="customerSaved($event)"
+      (busyChange)="customerBusy.set($event)"
+    />
+  }
+</app-drawer>

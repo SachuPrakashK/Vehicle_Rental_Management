@@ -1,0 +1,17 @@
+export const endpoints = {
+  dashboard: '/GetDashboardData',
+  vehicles: '/GetCars',
+  createVehicle: '/CreateNewCar',
+  updateVehicle: '/UpdateCar',
+  deleteVehicle: '/DeleteCarbyCarId',
+  customers: '/GetCustomers',
+  createCustomer: '/CreateNewCustomer',
+  updateCustomer: '/UpdateCustomer',
+  deleteCustomer: '/DeletCustomerById',
+  bookings: '/geAllBookings',
+  filterBookings: '/FilterBookings',
+  customerBookings: '/geAllBookingsByCustomerId',
+  booking: '/GetBookingByBookingId',
+  createBooking: '/CreateNewBooking',
+  deleteBooking: '/DeletBookingById',
+} as const;

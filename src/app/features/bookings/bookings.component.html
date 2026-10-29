@@ -1,0 +1,147 @@
+﻿<app-page-header title="Bookings" description="Every journey, organized in one place."
+  ><a routerLink="/book-vehicle" class="button"
+    ><app-icon name="add" />New booking</a
+  ></app-page-header
+>
+<section class="card">
+  <div class="toolbar">
+    <app-search
+      [value]="list.search()"
+      label="Search bookings"
+      (valueChange)="list.searchFor($event)"
+    />
+    <div class="toolbar-filters">
+      <div class="date-filter-control">
+        <button
+          type="button"
+          class="date-filter-display"
+          aria-label="Filter booking date"
+          (click)="openDatePicker(date)"
+        >
+          <span>{{ dateFilterLabel() }}</span>
+          <app-icon name="calendar" />
+        </button>
+        <input
+          #date
+          class="sr-only"
+          type="date"
+          aria-label="Filter booking date"
+          placeholder="dd-mm-yyyy"
+          [value]="dateFilter()"
+          (input)="dateFilter.set(date.value); list.page.set(1)"
+        />
+      </div>
+    </div>
+  </div>
+  @if (list.loading()) {
+    <div class="loading-state" role="status">
+      <span class="spinner"></span>Loading bookings&hellip;
+    </div>
+  } @else if (list.error()) {
+    <div class="error-state" role="alert">
+      <p>{{ list.error() }}</p>
+      <button class="button secondary" (click)="list.load()">Try again</button>
+    </div>
+  } @else if (!list.filtered().length) {
+    <app-empty-state
+      description="Create your first booking, or adjust your search and date filter."
+    />
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <caption class="sr-only">
+          All bookings
+        </caption>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Customer</th>
+            <th>Vehicle</th>
+            <th>Booking date</th>
+            <th>Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (booking of list.visible(); track booking.bookingId) {
+            <tr
+              class="clickable-row"
+              tabindex="0"
+              [attr.aria-label]="
+                'View details for booking ' + (booking.bookingUid || booking.bookingId)
+              "
+              (click)="openBooking(booking)"
+              (keydown.enter)="openBooking(booking, $event)"
+              (keydown.space)="openBooking(booking, $event)"
+            >
+              <td>{{ booking.bookingUid || '#' + booking.bookingId }}</td>
+              <td class="table-main">
+                {{ booking.customerName
+                }}<span class="subtext">{{ booking.mobileNo || 'No phone number' }}</span>
+              </td>
+              <td>{{ booking.brand }} {{ booking.model }}</td>
+              <td>{{ booking.bookingDate | date: 'dd MMM yyyy' }}</td>
+              <td class="amount">{{ booking.totalBillAmount | currency: currency }}</td>
+              <td (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                <app-action-menu
+                  [label]="'Actions for booking ' + booking.bookingId"
+                  [items]="rowActions"
+                  [disabled]="deleting() !== null"
+                  (selected)="bookingAction($event, booking)"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [total]="list.filtered().length"
+      [page]="list.currentPage()"
+      (changed)="list.page.set($event)"
+    />
+  }
+</section>
+<p class="form-note">
+  Return dates, booking status, and booking updates are not available for these records.
+</p>
+<app-drawer [open]="open()" title="Booking details" [busy]="detailBusy()" (closed)="closeDetails()">
+  @if (detailBusy()) {
+    <div class="loading-state"><span class="spinner"></span>Loading booking&hellip;</div>
+  } @else if (detailError()) {
+    <p class="field-error" role="alert">{{ detailError() }}</p>
+  } @else if (selected(); as booking) {
+    <span class="badge">Booking {{ booking.bookingUid || '#' + booking.bookingId }}</span>
+    <h2 class="mt-24">{{ booking.customerName }}</h2>
+    <dl class="details-grid">
+      <div>
+        <dt>Email address</dt>
+        <dd>{{ booking.email || 'Not provided' }}</dd>
+      </div>
+      <div>
+        <dt>Mobile</dt>
+        <dd>{{ booking.mobileNo || 'Not provided' }}</dd>
+      </div>
+      <div>
+        <dt>Vehicle</dt>
+        <dd>{{ booking.brand || 'Vehicle ID' }} {{ booking.model || booking.carId }}</dd>
+      </div>
+      <div>
+        <dt>Booking date</dt>
+        <dd>{{ booking.bookingDate | date: 'dd MMM yyyy' }}</dd>
+      </div>
+      <div>
+        <dt>Total billed amount</dt>
+        <dd>{{ booking.totalBillAmount | currency: currency }}</dd>
+      </div>
+      <div>
+        <dt>Recorded discount</dt>
+        <dd>{{ booking.discount }}</dd>
+      </div>
+    </dl>
+    <div class="notice info">
+      <app-icon name="info" />
+      <p>This record does not include a return date, rental status, or payment status.</p>
+    </div>
+  }
+</app-drawer>

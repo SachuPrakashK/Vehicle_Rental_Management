@@ -1,0 +1,19 @@
+<div class="pagination">
+  <span>{{ first() }}–{{ last() }} of {{ total() }} records</span>
+  <div>
+    <button
+      class="button secondary small"
+      [disabled]="page() <= 1"
+      (click)="changed.emit(page() - 1)"
+    >
+      Previous</button
+    ><span>Page {{ page() }} of {{ pages() }}</span
+    ><button
+      class="button secondary small"
+      [disabled]="page() >= pages()"
+      (click)="changed.emit(page() + 1)"
+    >
+      Next
+    </button>
+  </div>
+</div>

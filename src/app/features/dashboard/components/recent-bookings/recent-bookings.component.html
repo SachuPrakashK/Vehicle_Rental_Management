@@ -1,0 +1,44 @@
+<section class="card">
+  <div class="card-heading">
+    <div>
+      <h2>Recent bookings</h2>
+      <p>The latest activity across your fleet</p>
+    </div>
+    <a routerLink="/bookings" class="text-link">View all <app-icon name="arrow" /></a>
+  </div>
+  @if (recent().length) {
+    <div class="table-scroll">
+      <table>
+        <caption class="sr-only">
+          Recent bookings
+        </caption>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Customer</th>
+            <th>Vehicle</th>
+            <th>Booking date</th>
+            <th>Billed amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (booking of recent(); track booking.bookingId) {
+            <tr>
+              <td>
+                <a [routerLink]="['/bookings']" [queryParams]="{ view: booking.bookingId }">{{
+                  booking.bookingUid || '#' + booking.bookingId
+                }}</a>
+              </td>
+              <td class="table-main">{{ booking.customerName }}</td>
+              <td>{{ booking.brand }} {{ booking.model }}</td>
+              <td>{{ booking.bookingDate | date: 'dd MMM yyyy' }}</td>
+              <td class="amount">{{ booking.totalBillAmount | currency: currency() }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <app-empty-state description="Your recent bookings will appear here." />
+  }
+</section>

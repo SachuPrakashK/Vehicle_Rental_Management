@@ -1,0 +1,11 @@
+<label class="search-field">
+  <app-icon name="search" />
+  <input
+    type="search"
+    placeholder="Search"
+    [attr.aria-label]="label()"
+    [value]="value()"
+    [disabled]="disabled()"
+    (input)="update($event)"
+  />
+</label>

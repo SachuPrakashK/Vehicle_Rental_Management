@@ -1,0 +1,27 @@
+<app-modal
+  [open]="open()"
+  [compact]="true"
+  title="Custom Period"
+  closeLabel="Close custom period"
+  (closed)="closed.emit()"
+>
+  <form class="modal-form" [formGroup]="form" novalidate>
+    <div class="field">
+      <label for="custom-period-from">From date <span class="required">*</span></label>
+      <input id="custom-period-from" type="date" formControlName="from" />
+      <app-field-error [control]="form.controls.from" />
+    </div>
+    <div class="field">
+      <label for="custom-period-to">To date <span class="required">*</span></label>
+      <input id="custom-period-to" type="date" formControlName="to" />
+      <app-field-error [control]="form.controls.to" />
+    </div>
+    @if (form.hasError('dateRange') && form.touched) {
+      <small class="field-error" role="alert">From date must be on or before To date.</small>
+    }
+  </form>
+  <div modal-footer class="modal-footer">
+    <button type="button" class="button secondary" (click)="closed.emit()">Cancel</button>
+    <button type="button" class="button" [disabled]="form.invalid" (click)="apply()">Apply</button>
+  </div>
+</app-modal>

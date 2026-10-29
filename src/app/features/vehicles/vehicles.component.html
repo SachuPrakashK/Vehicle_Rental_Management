@@ -1,0 +1,316 @@
+﻿<app-page-header title="Your fleet" description="A well-organized fleet starts with the details."
+  ><button class="button" (click)="edit()">
+    <app-icon name="add" />Add vehicle
+  </button></app-page-header
+>
+<section class="card">
+  <div class="toolbar">
+    <app-search
+      [value]="list.search()"
+      label="Search vehicles"
+      (valueChange)="list.searchFor($event)"
+    />
+    <div class="toolbar-filters">
+      <select
+        #yearSelect
+        class="select-control"
+        aria-label="Filter by year"
+        (change)="yearFilter.set(yearSelect.value); list.page.set(1)"
+      >
+        <option value="">Years</option>
+        @for (year of years(); track year) {
+          <option [value]="year">{{ year }}</option>
+        }
+      </select>
+      <select
+        #typeSelect
+        class="select-control"
+        aria-label="Filter by vehicle type"
+        (change)="typeFilter.set(typeSelect.value); list.page.set(1)"
+      >
+        <option value="">Types</option>
+        <option value="CAR">Cars</option>
+        <option value="BIKE">Bikes</option>
+      </select>
+    </div>
+  </div>
+  @if (list.loading()) {
+    <div class="loading-state" role="status">
+      <span class="spinner"></span>Loading vehicles&hellip;
+    </div>
+  } @else if (list.error()) {
+    <div class="error-state" role="alert">
+      <p>{{ list.error() }}</p>
+      <button class="button secondary" (click)="list.load()">Try again</button>
+    </div>
+  } @else if (!list.filtered().length) {
+    <app-empty-state
+      description="Add your first vehicle, or try another search."
+      actionLabel="Add vehicle"
+      (action)="edit()"
+    />
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <caption class="sr-only">
+          Vehicle directory
+        </caption>
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Registration</th>
+            <th>Type</th>
+            <th>Year</th>
+            <th>Color</th>
+            <th>Daily rate</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (vehicle of list.visible(); track vehicle.carId) {
+            <tr
+              class="clickable-row"
+              tabindex="0"
+              [attr.aria-label]="'View details for ' + vehicle.brand + ' ' + vehicle.model"
+              (click)="viewVehicle(vehicle)"
+              (keydown.enter)="viewVehicle(vehicle, $event)"
+              (keydown.space)="viewVehicle(vehicle, $event)"
+            >
+              <td>
+                <div class="vehicle-cell">
+                  <img
+                    class="vehicle-thumbnail"
+                    [src]="imageUrl(vehicle)"
+                    alt=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    (error)="imageError($event)"
+                  />
+                  <div class="table-main">
+                    {{ vehicle.brand }}<span class="subtext">{{ vehicle.model }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ vehicle.regNo }}</td>
+              <td>
+                <span class="badge neutral">{{ vehicle.vehicleType || 'CAR' }}</span>
+              </td>
+              <td>{{ vehicle.year }}</td>
+              <td>{{ vehicle.color || 'Not provided' }}</td>
+              <td class="amount">{{ vehicle.dailyRate | currency: currency }}</td>
+              <td (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                <app-action-menu
+                  [label]="'Actions for ' + vehicle.model"
+                  [items]="rowActions"
+                  [disabled]="deleting() !== null"
+                  (selected)="vehicleAction($event, vehicle)"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [total]="list.filtered().length"
+      [page]="list.currentPage()"
+      (changed)="list.page.set($event)"
+    />
+  }
+</section>
+<app-drawer
+  [open]="open()"
+  [title]="viewing() ? 'Vehicle Details' : selected() ? 'Edit Vehicle' : 'Add Vehicle'"
+  [dirty]="!viewing() && form.dirty"
+  [busy]="busy()"
+  (closed)="closeDrawer()"
+>
+  @if (viewing()) {
+    @if (selected(); as vehicle) {
+      <img
+        class="detail-image"
+        [src]="imageUrl(vehicle)"
+        alt="Vehicle"
+        referrerpolicy="no-referrer"
+        (error)="imageError($event)"
+      />
+      <h2 class="mt-24">{{ vehicle.brand }} {{ vehicle.model }}</h2>
+      <dl class="details-grid">
+        <div>
+          <dt>Registration</dt>
+          <dd>{{ vehicle.regNo }}</dd>
+        </div>
+        <div>
+          <dt>Model year</dt>
+          <dd>{{ vehicle.year }}</dd>
+        </div>
+        <div>
+          <dt>Vehicle type</dt>
+          <dd>{{ vehicle.vehicleType || 'CAR' }}</dd>
+        </div>
+        <div>
+          <dt>Color</dt>
+          <dd>{{ vehicle.color || 'Not provided' }}</dd>
+        </div>
+        <div>
+          <dt>Daily rate</dt>
+          <dd>{{ vehicle.dailyRate | currency: currency }}</dd>
+        </div>
+      </dl>
+      <button class="button" (click)="edit(vehicle)"><app-icon name="edit" />Edit vehicle</button>
+    }
+  } @else {
+    <form id="vehicle-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <div class="field span-2">
+          <label for="vehicle-type">Vehicle type <span class="required">*</span></label>
+          <select
+            id="vehicle-type"
+            formControlName="vehicleType"
+            [attr.disabled]="selected() ? '' : null"
+          >
+            <option value="CAR">Car</option>
+            <option value="BIKE">Bike</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vehicle-brand">Brand <span class="required">*</span></label
+          ><input
+            id="vehicle-brand"
+            type="text"
+            formControlName="brand"
+            placeholder="Enter vehicle brand"
+          /><app-field-error [control]="form.controls.brand" />
+        </div>
+        <div class="field">
+          <label for="vehicle-model">Model <span class="required">*</span></label
+          ><input
+            id="vehicle-model"
+            type="text"
+            formControlName="model"
+            placeholder="Enter vehicle model"
+          /><app-field-error [control]="form.controls.model" />
+        </div>
+        <div class="field">
+          <label for="vehicle-regNo">Registration number <span class="required">*</span></label
+          ><input
+            id="vehicle-regNo"
+            type="text"
+            formControlName="regNo"
+            placeholder="Enter registration number"
+          /><app-field-error [control]="form.controls.regNo" />
+        </div>
+        <div class="field">
+          <label for="vehicle-year">Model year <span class="required">*</span></label
+          ><input
+            id="vehicle-year"
+            type="number"
+            formControlName="year"
+            placeholder="Enter model year"
+          /><app-field-error [control]="form.controls.year" />
+        </div>
+        <div class="field">
+          <label for="vehicle-color">Color</label
+          ><input
+            id="vehicle-color"
+            type="text"
+            formControlName="color"
+            placeholder="Enter vehicle color"
+          /><app-field-error [control]="form.controls.color" />
+        </div>
+        <div class="field">
+          <label for="vehicle-dailyRate">Daily rate (INR) <span class="required">*</span></label
+          ><input
+            id="vehicle-dailyRate"
+            type="number"
+            formControlName="dailyRate"
+            step="0.01"
+            min="0.01"
+            placeholder="Enter daily rental rate"
+          /><app-field-error [control]="form.controls.dailyRate" />
+        </div>
+        <div class="field span-2">
+          <label for="vehicle-carImage">Vehicle image URL</label
+          ><input
+            id="vehicle-carImage"
+            type="url"
+            formControlName="carImage"
+            placeholder="Enter HTTPS image URL"
+          /><app-field-error [control]="form.controls.carImage" />
+        </div>
+        @if (selected() && form.controls.vehicleType.value === 'BIKE') {
+          <div class="field">
+            <label for="vehicle-status">Status</label>
+            <select id="vehicle-status" formControlName="status">
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+              <option value="MAINTENANCE">Maintenance</option>
+            </select>
+          </div>
+          <label class="checkbox-label field">
+            <input type="checkbox" formControlName="available" /> Available for rental
+          </label>
+        }
+        <div class="field span-2 image-upload-field">
+          <span class="form-separator">or</span>
+          <input
+            id="vehicle-image-file"
+            class="sr-only"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            [disabled]="busy() || imageBusy()"
+            (change)="selectImage($event)"
+          />
+          <label
+            class="upload-dropzone"
+            [class.disabled]="busy() || imageBusy()"
+            for="vehicle-image-file"
+          >
+            <span class="upload-icon">
+              @if (imageBusy()) {
+                <span class="spinner"></span>
+              } @else {
+                <app-icon name="upload" />
+              }
+            </span>
+            <strong>Upload image</strong>
+            <span>Click to browse</span>
+            <small>JPG, PNG or WebP &middot; Max 5 MB</small>
+          </label>
+          @if (imageFile()) {
+            <div class="upload-selection">
+              <app-icon name="upload" />
+              <span class="selected-file-name" [title]="imageFile()?.name">{{
+                imageFile()?.name
+              }}</span>
+              <button type="button" class="text-link destructive" (click)="clearSelectedImage()">
+                Remove selected image
+              </button>
+            </div>
+            @if (imagePreview(); as preview) {
+              <img class="image-preview" [src]="preview" alt="Selected vehicle preview" />
+            }
+          }
+        </div>
+      </div>
+    </form>
+  }
+  @if (!viewing()) {
+    <div drawer-footer class="drawer-footer">
+      <button type="button" class="button secondary" [disabled]="busy()" (click)="cancel()">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="vehicle-form"
+        class="button"
+        [disabled]="form.invalid || busy() || imageBusy()"
+      >
+        @if (busy()) {
+          <span class="spinner"></span>
+        }
+        {{ selected() ? 'Save changes' : 'Create vehicle' }}
+      </button>
+    </div>
+  }
+</app-drawer>

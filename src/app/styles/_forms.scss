@@ -1,0 +1,286 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.field label,
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+.field input,
+.field select,
+.field textarea,
+.select-control {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 7px;
+  padding: 11px 12px;
+  color: var(--text-primary);
+  min-height: 43px;
+}
+.field input.sr-only {
+  position: absolute;
+  width: 1px;
+  max-width: 1px;
+  height: 1px;
+  min-height: 1px;
+  padding: 0;
+  margin: -1px;
+}
+.field textarea {
+  resize: vertical;
+}
+.field input.ng-invalid.ng-touched {
+  border-color: var(--error);
+}
+.field input:disabled {
+  background: var(--background);
+}
+.password-control {
+  position: relative;
+  min-width: 0;
+}
+.password-control input {
+  padding-right: 44px;
+}
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  transform: translateY(-50%);
+}
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: var(--primary);
+  background: var(--pastel-primary);
+}
+.field-error {
+  display: block;
+  color: var(--error);
+  font-size: 11px;
+}
+.span-2 {
+  grid-column: 1/-1;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 26px;
+}
+.compact-field {
+  gap: 4px;
+}
+.compact-field select {
+  width: auto;
+  min-width: 154px;
+}
+.form-separator {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  text-transform: uppercase;
+}
+.upload-dropzone {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 190px;
+  border: 1.5px dashed var(--secondary);
+  border-radius: var(--radius);
+  background: var(--pastel-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.upload-dropzone:hover {
+  border-color: var(--primary);
+  background: var(--pastel-primary);
+}
+.upload-dropzone.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.upload-dropzone strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.upload-dropzone span,
+.upload-dropzone small {
+  font-size: 11px;
+}
+.upload-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--primary);
+}
+.upload-icon app-icon {
+  width: 22px;
+  height: 22px;
+}
+.upload-selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.upload-selection app-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: var(--secondary);
+}
+.selected-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-selection .text-link {
+  flex-shrink: 0;
+}
+.image-preview {
+  width: 100%;
+  max-width: 100%;
+  height: 180px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  padding: 0 12px;
+  min-width: 230px;
+}
+.search-field app-icon {
+  color: var(--muted);
+  width: 18px;
+}
+.search-field input {
+  border: 0;
+  outline: 0;
+  padding: 11px 0;
+  width: 100%;
+  background: transparent;
+  color: var(--text-primary);
+}
+.search-field:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.search-field input:focus-visible {
+  outline: 0;
+}
+.form-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 14px 0;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.file-input {
+  max-width: 100%;
+}
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin: 22px 0;
+}
+.details-grid dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.details-grid dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.segmented {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 22px;
+}
+.segmented button {
+  background: transparent;
+  border: 0;
+  padding: 9px 16px;
+  border-radius: 5px;
+  color: var(--text-secondary);
+}
+.segmented button.active {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow);
+}
+.date-filter-control {
+  position: relative;
+}
+.date-filter-display {
+  height: var(--control-height);
+  min-width: 154px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 11px;
+}
+.date-filter-display app-icon {
+  width: 17px;
+  height: 17px;
+  color: var(--secondary);
+}

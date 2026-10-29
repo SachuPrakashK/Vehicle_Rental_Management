@@ -1,0 +1,12 @@
+<div class="auth-layout">
+  <app-auth-visual />
+  <section class="auth-form-side">
+    <div class="auth-form-container">
+      <img src="logo.svg" class="auth-mobile-logo" alt="Fleetline" />
+      <span class="eyebrow">YOUR RENTAL BUSINESS</span>
+      <h1>{{ title() }}</h1>
+      <p>{{ description() }}</p>
+      <ng-content />
+    </div>
+  </section>
+</div>
