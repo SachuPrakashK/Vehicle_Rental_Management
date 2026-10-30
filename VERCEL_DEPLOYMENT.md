@@ -122,7 +122,7 @@ Verified Preview URL:
 
 `https://fleetline-ennc0i3k9-sachuprakashk-4789s-projects.vercel.app`
 
-The deployment is protected by Vercel Authentication. The first plain `vercel deploy` was unexpectedly assigned to Vercel's Production target because it was the project's first deployment, despite not using `--prod`. Its protected alias is `https://fleetline-weld.vercel.app`. It is not an approved production release, Production SMTP is unset, and it must not be treated as operational.
+The canonical Production alias is `https://fleetline-rental-management.vercel.app`, and `FRONTEND_ORIGIN` is configured to match it. The first plain `vercel deploy` was unexpectedly assigned to Vercel's Production target because it was the project's first deployment, despite not using `--prod`. Production SMTP remains unset, so the API intentionally fails its startup validation and the alias must not yet be treated as operational.
 
 For another Preview deployment:
 
