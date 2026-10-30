@@ -19,7 +19,16 @@ async function createPool(): Promise<pg.Pool> {
   }
   return new pg.Pool({
     connectionString: env.DATABASE_URL,
-    ssl: env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : undefined,
+    ssl:
+      env.NODE_ENV !== 'production' || env.DATABASE_SSL_MODE === 'disable'
+        ? undefined
+        : {
+            rejectUnauthorized: env.DATABASE_SSL_MODE === 'verify-full',
+            ...(env.DATABASE_SSL_CA ? { ca: env.DATABASE_SSL_CA.replace(/\\n/g, '\n') } : {}),
+          },
+    max: env.DATABASE_POOL_MAX,
+    idleTimeoutMillis: env.DATABASE_IDLE_TIMEOUT_MS,
+    connectionTimeoutMillis: env.DATABASE_CONNECTION_TIMEOUT_MS,
   });
 }
 

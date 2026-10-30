@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { del, head } from '@vercel/blob';
 import { env } from '../config/env.js';
 import { AppError } from '../utils/app-error.js';
 const signatures: { mime: string; extension: string; matches: (buffer: Buffer) => boolean }[] = [
@@ -25,6 +26,7 @@ const signatures: { mime: string; extension: string; matches: (buffer: Buffer) =
 ];
 const profileRoot = path.resolve(env.UPLOAD_DIRECTORY);
 const vehicleRoot = path.resolve(env.VEHICLE_UPLOAD_DIRECTORY);
+export type ImageKind = 'profile-images' | 'vehicle-images';
 async function saveImage(
   file: Express.Multer.File,
   root: string,
@@ -45,11 +47,47 @@ export function saveVehicleImage(file: Express.Multer.File): Promise<string> {
 }
 export async function deleteProfileImage(reference: string | null): Promise<void> {
   if (!reference) return;
+  if (isBlobUrl(reference)) {
+    await del(reference);
+    return;
+  }
   const name = path.basename(reference);
   const target = path.resolve(profileRoot, name);
   if (path.dirname(target) !== profileRoot)
     throw new AppError(400, 'Invalid profile image reference.');
   await fs.rm(target, { force: true });
+}
+function isBlobUrl(reference: string): boolean {
+  try {
+    const url = new URL(reference);
+    return url.protocol === 'https:' && url.hostname.endsWith('.public.blob.vercel-storage.com');
+  } catch {
+    return false;
+  }
+}
+export async function validateBlobImage(
+  reference: string,
+  kind: ImageKind,
+  ownerId: string,
+): Promise<void> {
+  if (!isBlobUrl(reference)) throw new AppError(422, 'Invalid image storage URL.');
+  try {
+    const metadata = await head(reference);
+    const maxBytes = env.IMAGE_UPLOAD_MAX_MB * 1024 * 1024;
+    if (!metadata.pathname.startsWith(kind + '/' + ownerId + '/') || metadata.size > maxBytes)
+      throw new AppError(422, 'Invalid image upload.');
+    const expected = signatures.find((item) => item.mime === metadata.contentType);
+    if (!expected) throw new AppError(422, 'Choose a valid JPEG, PNG, or WebP image.');
+    const response = await fetch(reference, { headers: { Range: 'bytes=0-15' } });
+    if (!response.ok) throw new AppError(422, 'Unable to validate the uploaded image.');
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (!expected.matches(buffer))
+      throw new AppError(422, 'Choose a valid JPEG, PNG, or WebP image.');
+  } catch (error) {
+    await del(reference).catch(() => undefined);
+    if (error instanceof AppError) throw error;
+    throw new AppError(422, 'Unable to validate the uploaded image.');
+  }
 }
 export const profileUploadRoot = profileRoot;
 export const vehicleUploadRoot = vehicleRoot;

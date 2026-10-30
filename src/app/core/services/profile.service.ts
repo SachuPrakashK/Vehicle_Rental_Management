@@ -5,10 +5,12 @@ import { environment } from '../../../environments/environment';
 import type { AuthApiResponse, AuthUser } from '../models/auth.models';
 import { validateProfileImage } from '../../shared/utils/validators';
 import { AuthStore } from './auth-store.service';
+import { ImageUploadService } from './image-upload.service';
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   private readonly http = inject(HttpClient);
   private readonly store = inject(AuthStore);
+  private readonly imageUploads = inject(ImageUploadService);
   readonly profile = computed(() => this.store.user());
   update(details: { firstName: string; lastName: string; phone: string | null }) {
     return this.http
@@ -23,6 +25,11 @@ export class ProfileService {
   updateImage(file: File) {
     const error = validateProfileImage(file);
     if (error) throw new Error(error);
+    if (environment.blobImageUploads)
+      return this.imageUploads.upload(file, 'profile-images').pipe(
+        map((user) => user as AuthUser),
+        tap((user) => this.store.updateUser(user)),
+      );
     const body = new FormData();
     body.append('image', file);
     return this.http

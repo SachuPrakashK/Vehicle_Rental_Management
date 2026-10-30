@@ -18,7 +18,7 @@ Fleetline is an Angular 22 vehicle-rental administration application with a dedi
 
 Frontend: Angular 22.2, TypeScript 6, RxJS, SCSS, amCharts 5, Vitest, and Playwright.
 
-Backend: Node.js, Express 5, TypeScript, PostgreSQL, bcrypt, JWT, Zod, Multer, Helmet, CORS, SMTP, and rate limiting.
+Backend: Node.js, Express 5, TypeScript, PostgreSQL, bcryptjs, JWT, Zod, Multer, Helmet, CORS, SMTP, and rate limiting.
 
 ## Prerequisites and installation
 

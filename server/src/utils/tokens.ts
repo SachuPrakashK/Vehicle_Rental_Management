@@ -26,9 +26,9 @@ export function verifyAccessToken(token: string): AccessClaims {
   });
   if (
     typeof payload === 'string' ||
-    payload.type !== 'access' ||
+    payload['type'] !== 'access' ||
     typeof payload.sub !== 'string' ||
-    !['SUPER_ADMIN', 'ADMIN', 'STAFF'].includes(String(payload.role))
+    !['SUPER_ADMIN', 'ADMIN', 'STAFF'].includes(String(payload['role']))
   )
     throw new Error('Invalid access token');
   return payload as AccessClaims;

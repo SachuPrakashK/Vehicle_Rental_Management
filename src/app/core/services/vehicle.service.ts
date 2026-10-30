@@ -6,10 +6,12 @@ import { endpoints } from '../config/api.config';
 import { BikeApiModel, Vehicle } from '../models/api.models';
 import { environment } from '../../../environments/environment';
 import type { AuthApiResponse } from '../models/auth.models';
+import { ImageUploadService } from './image-upload.service';
 @Injectable({ providedIn: 'root' })
 export class VehicleService {
   private readonly api = inject(ApiService);
   private readonly http = inject(HttpClient);
+  private readonly imageUploads = inject(ImageUploadService);
   list() {
     return forkJoin({
       cars: this.api.get<Vehicle[]>(endpoints.vehicles),
@@ -61,6 +63,10 @@ export class VehicleService {
     return this.api.delete(endpoints.deleteVehicle, { carid: id });
   }
   uploadImage(file: File) {
+    if (environment.blobImageUploads)
+      return this.imageUploads
+        .upload(file, 'vehicle-images')
+        .pipe(map((result) => (result as { url: string }).url));
     const body = new FormData();
     body.append('image', file);
     return this.http
