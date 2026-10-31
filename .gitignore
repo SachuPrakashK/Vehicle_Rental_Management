@@ -11,6 +11,11 @@
 /server/node_modules
 /server/dist
 /server/.env
+/server/.env*
+!/server/.env.example
+/.vercel
+/.env*
+!/.env.production.example
 /server/uploads
 /server/*.log
 /angular-dev.*.log

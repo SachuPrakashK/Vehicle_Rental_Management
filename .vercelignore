@@ -1,0 +1,13 @@
+.angular
+.git
+.vscode
+coverage
+dist
+node_modules
+playwright-report
+server/dist
+server/node_modules
+server/uploads
+test-results
+*.log
+server/.env

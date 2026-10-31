@@ -4,7 +4,10 @@ import { safeUser } from '../models/user.model.js';
 import { AppError } from '../utils/app-error.js';
 import { deleteProfileImage, saveProfileImage } from '../services/file-storage.service.js';
 import { success } from '../utils/api-response.js';
+import { env } from '../config/env.js';
 export async function upload(request: Request, response: Response) {
+  if (env.IMAGE_STORAGE_DRIVER !== 'local')
+    throw new AppError(409, 'Use the configured direct image upload flow.');
   if (!request.file) throw new AppError(422, 'Profile image is required.');
   const current = await users.findUserById(request.user!.id);
   if (!current) throw new AppError(404, 'User not found.');
