@@ -128,6 +128,8 @@ Backend tests cover password hashing, duplicates, valid/invalid login, expired J
 
 ## Security considerations
 
+Fleetline uses database-backed RBAC with protected system roles, granular permissions, server-side enforcement for Fleetline-owned APIs, fresh permission resolution, audit logs, and Angular route/action checks. See `RBAC_ARCHITECTURE_AND_AUDIT.md` and `RBAC_PERMISSION_MATRIX.md`.
+
 The API uses parameterized SQL, centralized schemas, bcrypt cost 12, sanitized users, generic credential/reset responses, secure headers, strict CORS, body limits, auth rate limits, server-side roles, randomized file keys, content signatures, and safe-path deletion. It never logs passwords or tokens and never stores raw refresh/reset credentials.
 
 CarRentalApp remains a separate public third-party service. Its rental endpoints cannot be made private by Fleetline authentication. Cars, customers, and car bookings continue to use its documented endpoints. It has no bike type, bike booking, vehicle-image upload, return-date persistence, availability, payment, or period-reporting endpoint. Fleetline therefore provides authenticated bike CRUD and vehicle-image storage, derives dashboard periods from the loaded booking list, and prevents bike booking instead of fabricating an unsupported external endpoint. Production should proxy or migrate the remaining rental resources behind an authenticated backend before treating rental data as confidential.

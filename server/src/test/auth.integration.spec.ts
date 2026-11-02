@@ -16,10 +16,68 @@ interface SessionBody {
 const password = 'StrongPassword@123';
 let token = '';
 let userId = '';
+let adminToken = '';
 
 beforeAll(async () => {
   for (const migration of ['001_auth.sql', '002_bikes.sql'])
     await pool.query(await fs.readFile(path.resolve('src/database/migrations', migration), 'utf8'));
+  const rbacSql = await fs.readFile(
+    path.resolve('src/database/migrations', '003_rbac.sql'),
+    'utf8',
+  );
+  const roleStart = rbacSql.indexOf('INSERT INTO roles');
+  const permissionStart = rbacSql.indexOf('INSERT INTO permissions');
+  const mappingStart = rbacSql.indexOf('INSERT INTO role_permissions');
+  await pool.query(rbacSql.slice(0, roleStart));
+  await pool.query(rbacSql.slice(roleStart, permissionStart));
+  await pool.query(rbacSql.slice(permissionStart, mappingStart));
+  const roles = await pool.query<{ id: string; code: string }>('SELECT id,code FROM roles');
+  const permissions = await pool.query<{ id: string; code: string }>(
+    'SELECT id,code FROM permissions',
+  );
+  const admin = new Set([
+    'dashboard.view',
+    'vehicles.view',
+    'vehicles.create',
+    'vehicles.edit',
+    'vehicles.delete',
+    'bookings.view',
+    'bookings.create',
+    'bookings.edit',
+    'bookings.cancel',
+    'bookings.delete',
+    'customers.view',
+    'customers.create',
+    'customers.edit',
+    'customers.delete',
+    'ledger.view',
+    'ledger.create',
+    'ledger.edit',
+    'ledger.export',
+    'reports.view',
+    'reports.export',
+  ]);
+  const staff = new Set([
+    'dashboard.view',
+    'vehicles.view',
+    'bookings.view',
+    'bookings.create',
+    'bookings.edit',
+    'customers.view',
+    'customers.create',
+    'customers.edit',
+  ]);
+  for (const role of roles.rows)
+    for (const permission of permissions.rows)
+      if (
+        role.code === 'SUPER_ADMIN' ||
+        (role.code === 'ADMIN' && admin.has(permission.code)) ||
+        (role.code === 'STAFF' && staff.has(permission.code))
+      )
+        await pool.query('INSERT INTO role_permissions(role_id,permission_id) VALUES($1,$2)', [
+          role.id,
+          permission.id,
+        ]);
 });
 afterAll(async () => {
   await pool.end();
@@ -255,11 +313,15 @@ describe('authentication API', () => {
       "INSERT INTO users(first_name,last_name,email,password_hash,role) VALUES('Super','Admin','root@example.com',$1,'SUPER_ADMIN') RETURNING id",
       [hash],
     );
+    await pool.query(
+      "INSERT INTO user_roles(user_id,role_id) SELECT $1,id FROM roles WHERE code='SUPER_ADMIN'",
+      [admin.rows[0]!.id],
+    );
     const login = await request(app)
       .post('/api/auth/login')
       .send({ email: 'root@example.com', password })
       .expect(200);
-    const adminToken = (login.body as SessionBody).data.accessToken;
+    adminToken = (login.body as SessionBody).data.accessToken;
     await request(app)
       .get('/api/admin/users')
       .set('Authorization', 'Bearer ' + adminToken)
@@ -270,10 +332,18 @@ describe('authentication API', () => {
       .expect(400);
   });
   it('uploads vehicle images and manages bikes', async () => {
+    await request(app)
+      .post('/api/vehicles/images')
+      .set('Authorization', 'Bearer ' + token)
+      .attach('image', Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), {
+        filename: 'forbidden.png',
+        contentType: 'image/png',
+      })
+      .expect(403);
     const png = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), Buffer.alloc(32)]);
     const image = await request(app)
       .post('/api/vehicles/images')
-      .set('Authorization', 'Bearer ' + token)
+      .set('Authorization', 'Bearer ' + adminToken)
       .attach('image', png, { filename: 'bike.png', contentType: 'image/png' })
       .expect(201);
     expect(image.body.data.url).toMatch(/^\/uploads\/vehicle-images\//);
@@ -290,26 +360,122 @@ describe('authentication API', () => {
     };
     const created = await request(app)
       .post('/api/bikes')
-      .set('Authorization', 'Bearer ' + token)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send(input)
       .expect(201);
     const id = created.body.data.id as number;
     await request(app)
       .get('/api/bikes/' + id)
-      .set('Authorization', 'Bearer ' + token)
+      .set('Authorization', 'Bearer ' + adminToken)
       .expect(200);
     await request(app)
       .put('/api/bikes/' + id)
-      .set('Authorization', 'Bearer ' + token)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({ ...input, available: false, status: 'MAINTENANCE' })
       .expect(200);
     await request(app)
       .get('/api/bikes')
-      .set('Authorization', 'Bearer ' + token)
+      .set('Authorization', 'Bearer ' + adminToken)
       .expect(200);
     await request(app)
       .delete('/api/bikes/' + id)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200);
+  });
+
+  it('enforces exact default permissions and protects role administration', async () => {
+    const staffPermissions = await request(app)
+      .get('/api/auth/me/permissions')
       .set('Authorization', 'Bearer ' + token)
       .expect(200);
+    expect(staffPermissions.body.data.permissions).toEqual([
+      'bookings.create',
+      'bookings.edit',
+      'bookings.view',
+      'customers.create',
+      'customers.edit',
+      'customers.view',
+      'dashboard.view',
+      'vehicles.view',
+    ]);
+    await request(app)
+      .get('/api/authorization/roles')
+      .set('Authorization', 'Bearer ' + token)
+      .expect(403);
+    const roles = await request(app)
+      .get('/api/authorization/roles')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200);
+    const superAdmin = roles.body.data.find(
+      (role: { code: string }) => role.code === 'SUPER_ADMIN',
+    );
+    await request(app)
+      .delete('/api/authorization/roles/' + superAdmin.id)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(403);
+  });
+
+  it('creates custom roles, applies changes immediately, and audits assignments', async () => {
+    const permissions = await request(app)
+      .get('/api/authorization/permissions')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200);
+    const permissionId = (code: string): string =>
+      permissions.body.data.find((permission: { code: string }) => permission.code === code).id;
+    const created = await request(app)
+      .post('/api/authorization/roles')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({
+        name: 'Booking Executive',
+        code: 'BOOKING_EXECUTIVE',
+        description: 'Booking operations.',
+        isActive: true,
+      })
+      .expect(201);
+    let role = created.body.data;
+    const assigned = await request(app)
+      .put('/api/authorization/roles/' + role.id + '/permissions')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({
+        permissionIds: [permissionId('dashboard.view'), permissionId('bookings.view')],
+        version: role.version,
+      })
+      .expect(200);
+    role = assigned.body.data;
+    await request(app)
+      .put('/api/authorization/users/' + userId + '/roles')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({ roleIds: [role.id] })
+      .expect(200);
+    const effective = await request(app)
+      .get('/api/auth/me/permissions')
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200);
+    expect(effective.body.data.permissions).toEqual(['bookings.view', 'dashboard.view']);
+    await request(app)
+      .delete('/api/authorization/roles/' + role.id)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(409);
+    const roles = await request(app)
+      .get('/api/authorization/roles')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200);
+    const staff = roles.body.data.find((item: { code: string }) => item.code === 'STAFF');
+    await request(app)
+      .put('/api/authorization/users/' + userId + '/roles')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({ roleIds: [staff.id] })
+      .expect(200);
+    await request(app)
+      .delete('/api/authorization/roles/' + role.id)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200);
+    const audits = await request(app)
+      .get('/api/authorization/audit-logs')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200);
+    expect(
+      audits.body.data.some((entry: { action: string }) => entry.action === 'USER_ROLES_UPDATED'),
+    ).toBe(true);
   });
 });

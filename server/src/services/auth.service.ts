@@ -10,6 +10,7 @@ import * as resets from '../repositories/reset.repository.js';
 import { AppError } from '../utils/app-error.js';
 import { hashToken, randomToken, signAccessToken } from '../utils/tokens.js';
 import { emailService } from './email.service.js';
+import * as rbac from '../repositories/rbac.repository.js';
 
 const refreshExpiry = (): Date => new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 86400000);
 const resetExpiry = (): Date => new Date(Date.now() + env.PASSWORD_RESET_TTL_MINUTES * 60000);
@@ -37,7 +38,15 @@ async function issueSession(
   } finally {
     client.release();
   }
-  return { accessToken: signAccessToken(user.id, user.role), refreshToken, user: safeUser(user) };
+  const [roles, permissions] = await Promise.all([
+    rbac.userRoles(user.id),
+    rbac.effectivePermissions(user.id),
+  ]);
+  return {
+    accessToken: signAccessToken(user.id, user.role),
+    refreshToken,
+    user: { ...safeUser(user), roles, permissions },
+  };
 }
 export async function register(input: {
   firstName: string;
@@ -47,16 +56,16 @@ export async function register(input: {
   password: string;
 }): Promise<SafeUser> {
   try {
-    return safeUser(
-      await users.createUser({
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        phone: input.phone || null,
-        passwordHash: await bcrypt.hash(input.password, 12),
-        role: 'STAFF',
-      }),
-    );
+    const user = await users.createUser({
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      phone: input.phone || null,
+      passwordHash: await bcrypt.hash(input.password, 12),
+      role: 'STAFF',
+    });
+    await rbac.assignSystemRole(user.id, 'STAFF');
+    return safeUser(user);
   } catch (error) {
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505')
       throw new AppError(409, 'An account with this email already exists.');
@@ -114,7 +123,15 @@ export async function refresh(rawToken: string) {
     await sessions.replaceSession(client, current.id, replacement.id);
     await client.query('COMMIT');
     completed = true;
-    return { accessToken: signAccessToken(user.id, user.role), refreshToken, user: safeUser(user) };
+    const [roles, permissions] = await Promise.all([
+      rbac.userRoles(user.id, client),
+      rbac.effectivePermissions(user.id, client),
+    ]);
+    return {
+      accessToken: signAccessToken(user.id, user.role),
+      refreshToken,
+      user: { ...safeUser(user), roles, permissions },
+    };
   } catch (error) {
     if (!completed) await client.query('ROLLBACK');
     throw error;

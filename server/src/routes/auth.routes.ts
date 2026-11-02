@@ -56,6 +56,7 @@ router.post(
   asyncHandler(controller.changePassword),
 );
 router.get('/me', requireAuth, asyncHandler(controller.me));
+router.get('/me/permissions', requireAuth, asyncHandler(controller.permissions));
 router.put('/me', requireAuth, validateBody(profileSchema), asyncHandler(controller.updateMe));
 router.post(
   '/me/profile-image',

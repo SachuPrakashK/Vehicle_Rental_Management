@@ -15,7 +15,7 @@
 
     <nav>
       @for (item of navigation; track item.path) {
-        @if (!item.superAdmin || auth.isSuperAdmin()) {
+        @if (permissions.has(item.permission)) {
           <div class="sidebar-nav">
             <a
               [routerLink]="item.path"

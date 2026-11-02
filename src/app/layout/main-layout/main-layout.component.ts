@@ -5,6 +5,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { IconComponent, IconName } from '../../shared/icons/icon.component';
+import type { PermissionCode } from '../../core/models/rbac.models';
+import { PermissionService } from '../../core/services/permission.service';
 @Component({
   selector: 'app-main-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
@@ -14,6 +16,7 @@ import { IconComponent, IconName } from '../../shared/icons/icon.component';
 })
 export class MainLayoutComponent {
   readonly auth = inject(AuthService);
+  readonly permissions = inject(PermissionService);
   private readonly document = inject(DOCUMENT);
   readonly collapsed = signal(false);
   readonly mobileOpen = signal(false);
@@ -23,20 +26,42 @@ export class MainLayoutComponent {
     path: string;
     icon: IconName;
     section?: string;
-    superAdmin?: boolean;
+    permission: PermissionCode;
   }[] = [
-    { label: 'Dashboard', path: '/dashboard', icon: 'dashboard', section: 'RENTALS' },
-    { label: 'Book vehicle', path: '/book-vehicle', icon: 'bookVehicle' },
-    { label: 'Vehicles', path: '/vehicles', icon: 'vehicle' },
-    { label: 'Bookings', path: '/bookings', icon: 'booking' },
-    { label: 'Customers', path: '/customers', icon: 'customer' },
-    { label: 'Customer ledger', path: '/customer-ledger', icon: 'ledger' },
+    {
+      label: 'Dashboard',
+      path: '/dashboard',
+      icon: 'dashboard',
+      section: 'RENTALS',
+      permission: 'dashboard.view',
+    },
+    {
+      label: 'Book vehicle',
+      path: '/book-vehicle',
+      icon: 'bookVehicle',
+      permission: 'bookings.create',
+    },
+    { label: 'Vehicles', path: '/vehicles', icon: 'vehicle', permission: 'vehicles.view' },
+    { label: 'Bookings', path: '/bookings', icon: 'booking', permission: 'bookings.view' },
+    { label: 'Customers', path: '/customers', icon: 'customer', permission: 'customers.view' },
+    {
+      label: 'Customer ledger',
+      path: '/customer-ledger',
+      icon: 'ledger',
+      permission: 'ledger.view',
+    },
     {
       label: 'Admin users',
       path: '/admin-users',
       icon: 'shield',
       section: 'MANAGEMENT',
-      superAdmin: true,
+      permission: 'users.view',
+    },
+    {
+      label: 'Roles & permissions',
+      path: '/roles-permissions',
+      icon: 'shield',
+      permission: 'roles.view',
     },
   ];
   constructor() {

@@ -94,4 +94,6 @@ export interface AdminUser {
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string | null;
+  roles?: import('./auth.models').RoleSummary[];
+  permissionCount?: number;
 }

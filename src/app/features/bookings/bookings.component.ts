@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { BookingService } from '../../core/services/booking.service';
@@ -18,6 +18,7 @@ import {
   ActionMenuItem,
 } from '../../shared/components/action-menu/action-menu.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
+import { PermissionService } from '../../core/services/permission.service';
 @Component({
   selector: 'app-bookings',
   imports: [
@@ -40,6 +41,7 @@ export class BookingsComponent {
   private readonly feedback = inject(FeedbackService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  readonly permissions = inject(PermissionService);
   readonly dateFilter = signal('');
   readonly currency = environment.currency;
   readonly list = new ListState(
@@ -63,10 +65,12 @@ export class BookingsComponent {
   readonly detailBusy = signal(false);
   readonly detailError = signal('');
   readonly deleting = signal<number | null>(null);
-  readonly rowActions: ActionMenuItem[] = [
+  readonly rowActions = computed<ActionMenuItem[]>(() => [
     { id: 'view', label: 'View', icon: 'view' },
-    { id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
-  ];
+    ...(this.permissions.has('bookings.delete')
+      ? [{ id: 'delete', label: 'Delete', icon: 'delete' as const, destructive: true }]
+      : []),
+  ]);
   constructor() {
     void this.initialize();
   }
@@ -103,6 +107,7 @@ export class BookingsComponent {
     }
   }
   async remove(booking: Booking): Promise<void> {
+    if (!this.permissions.has('bookings.delete')) return;
     if (
       this.deleting() !== null ||
       !(await this.feedback.confirm(

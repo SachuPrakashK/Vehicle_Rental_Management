@@ -4,6 +4,7 @@ import type { UserRecord, UserRole } from '../models/user.model.js';
 import { safeUser } from '../models/user.model.js';
 import { AppError } from '../utils/app-error.js';
 import { verifyAccessToken } from '../utils/tokens.js';
+import * as rbac from '../repositories/rbac.repository.js';
 
 export const requireAuth: RequestHandler = async (request, _response, next) => {
   try {
@@ -13,7 +14,12 @@ export const requireAuth: RequestHandler = async (request, _response, next) => {
     const result = await pool.query<UserRecord>('SELECT * FROM users WHERE id = $1', [claims.sub]);
     const user = result.rows[0];
     if (!user?.is_active) throw new AppError(401, 'Authentication required.');
-    request.user = safeUser(user);
+    const [roles, permissions] = await Promise.all([
+      rbac.userRoles(user.id),
+      rbac.effectivePermissions(user.id),
+    ]);
+    request.user = { ...safeUser(user), roles, permissions };
+    request.permissions = permissions;
     next();
   } catch (error) {
     next(error instanceof AppError ? error : new AppError(401, 'Invalid or expired access token.'));
@@ -24,6 +30,16 @@ export const requireRole =
   (request, _response, next) => {
     if (!request.user) return next(new AppError(401, 'Authentication required.'));
     if (!roles.includes(request.user.role))
+      return next(new AppError(403, 'You do not have permission to perform this action.'));
+    next();
+  };
+
+export const requirePermission =
+  (...required: string[]): RequestHandler =>
+  (request, _response, next) => {
+    if (!request.user) return next(new AppError(401, 'Authentication required.'));
+    const permissions = request.permissions ?? [];
+    if (!required.every((permission) => permissions.includes(permission)))
       return next(new AppError(403, 'You do not have permission to perform this action.'));
     next();
   };

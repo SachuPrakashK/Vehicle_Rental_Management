@@ -34,6 +34,63 @@
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
+
+.permission-groups,
+.permission-options {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.permission-group {
+  padding: var(--space-16);
+}
+
+.permission-group-heading,
+.inline-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.permission-group-heading h3 {
+  margin: 0;
+}
+
+.permission-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: var(--space-16);
+}
+
+.permission-options .checkbox-label {
+  align-items: flex-start;
+  padding: var(--space-12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.permission-options small,
+.table-subtitle {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+}
+
+.access-denied {
+  max-width: 36rem;
+  margin: 8vh auto;
+  text-align: center;
+}
+
+.access-denied > app-icon {
+  color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .permission-options {
+    grid-template-columns: 1fr;
+  }
+}
 .stat-card.primary {
   background: var(--pastel-primary);
 }

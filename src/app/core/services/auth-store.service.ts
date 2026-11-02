@@ -9,6 +9,7 @@ export class AuthStore {
   readonly isAuthenticated = computed(() => !!this.userState() && !!this.tokenState());
   readonly isResolved = signal(false);
   readonly isSuperAdmin = computed(() => this.user()?.role === 'SUPER_ADMIN');
+  readonly permissions = computed(() => this.user()?.permissions ?? []);
   setSession(session: AuthSession): void {
     this.userState.set(session.user);
     this.tokenState.set(session.accessToken);

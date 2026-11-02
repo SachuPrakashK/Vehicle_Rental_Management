@@ -25,6 +25,8 @@ export interface SafeUser {
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt: Date | null;
+  roles?: import('./rbac.model.js').RoleSummary[];
+  permissions?: string[];
 }
 export function safeUser(user: UserRecord): SafeUser {
   return {

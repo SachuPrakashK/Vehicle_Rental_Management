@@ -9,6 +9,7 @@ import adminUserRoutes from './routes/admin-user.routes.js';
 import vehicleRoutes from './routes/vehicle.routes.js';
 import bikeRoutes from './routes/bike.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import rbacRoutes from './routes/rbac.routes.js';
 import { errorHandler, notFound } from './middleware/error.middleware.js';
 import { profileUploadRoot, vehicleUploadRoot } from './services/file-storage.service.js';
 export const app = express();
@@ -25,7 +26,7 @@ app.use(
       return callback(null, false);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
@@ -58,5 +59,6 @@ app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bikes', bikeRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/authorization', rbacRoutes);
 app.use(notFound);
 app.use(errorHandler);
