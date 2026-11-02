@@ -5,7 +5,9 @@
     <p>Welcome back. Let's keep your rental business moving.</p>
   </div>
   <div class="heading-actions">
-    <a routerLink="/book-vehicle" class="button"><app-icon name="add" />New booking</a>
+    @if (permissions.has('bookings.create')) {
+      <a routerLink="/book-vehicle" class="button"><app-icon name="add" />New booking</a>
+    }
   </div>
 </div>
 @if (busy()) {

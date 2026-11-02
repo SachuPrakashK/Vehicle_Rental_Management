@@ -1,0 +1,189 @@
+<app-page-header
+  title="Roles & permissions"
+  description="Control access with role-based permissions."
+>
+  @if (access.has('roles.create')) {
+    <button class="button" type="button" (click)="edit()">
+      <app-icon name="add" />Create role
+    </button>
+  }
+</app-page-header>
+
+<section class="card">
+  <div class="toolbar">
+    <app-search [value]="search()" label="Search roles" (valueChange)="search.set($event)" />
+  </div>
+  @if (loading()) {
+    <div class="loading-state"><span class="spinner"></span>Loading roles&hellip;</div>
+  } @else if (!filteredRoles().length) {
+    <app-empty-state description="No roles match this search." />
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Type</th>
+            <th>Users</th>
+            <th>Permissions</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of filteredRoles(); track role.id) {
+            <tr>
+              <td>
+                <strong>{{ role.name }}</strong
+                ><small class="table-subtitle">{{ role.description || role.code }}</small>
+              </td>
+              <td>
+                <span class="badge neutral">{{ role.isSystemRole ? 'System' : 'Custom' }}</span>
+              </td>
+              <td>{{ role.assignedUsers }}</td>
+              <td>{{ role.permissions.length }}</td>
+              <td>
+                <span [class]="role.isActive ? 'badge' : 'badge neutral'">{{
+                  role.isActive ? 'Active' : 'Inactive'
+                }}</span>
+              </td>
+              <td>
+                <div class="inline-actions">
+                  @if (access.has('roles.assign_permissions')) {
+                    <button
+                      class="button secondary small"
+                      type="button"
+                      [disabled]="role.code === 'SUPER_ADMIN'"
+                      (click)="editPermissions(role)"
+                    >
+                      Permissions
+                    </button>
+                  }
+                  @if (!role.isSystemRole && access.has('roles.edit')) {
+                    <button
+                      class="icon-button"
+                      type="button"
+                      aria-label="Edit role"
+                      (click)="edit(role)"
+                    >
+                      <app-icon name="edit" />
+                    </button>
+                  }
+                  @if (!role.isSystemRole && access.has('roles.delete')) {
+                    <button
+                      class="icon-button destructive"
+                      type="button"
+                      aria-label="Delete role"
+                      [disabled]="!!role.assignedUsers"
+                      (click)="remove(role)"
+                    >
+                      <app-icon name="delete" />
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<app-drawer
+  [open]="drawerOpen()"
+  [title]="selected() ? 'Edit Role' : 'Create Role'"
+  [dirty]="form.dirty"
+  [busy]="busy()"
+  (closed)="drawerOpen.set(false)"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="form-grid single-column">
+      <div class="field">
+        <label for="role-name">Role name <span class="required">*</span></label
+        ><input
+          id="role-name"
+          formControlName="name"
+          placeholder="Enter role name"
+        /><app-field-error [control]="form.controls.name" />
+      </div>
+      <div class="field">
+        <label for="role-code">Role code <span class="required">*</span></label
+        ><input
+          id="role-code"
+          formControlName="code"
+          placeholder="Enter role code"
+        /><app-field-error [control]="form.controls.code" />
+      </div>
+      <div class="field">
+        <label for="role-description">Description</label
+        ><textarea
+          id="role-description"
+          formControlName="description"
+          placeholder="Describe this role"
+        ></textarea
+        ><app-field-error [control]="form.controls.description" />
+      </div>
+      <label class="checkbox-label"
+        ><input type="checkbox" formControlName="isActive" /> Active role</label
+      >
+    </div>
+    <div class="form-actions">
+      <button class="button" type="submit" [disabled]="form.invalid || busy()">
+        @if (busy()) {
+          <span class="spinner"></span>
+        }
+        Save role
+      </button>
+    </div>
+  </form>
+</app-drawer>
+
+<app-drawer
+  [open]="matrixOpen()"
+  [title]="'Permissions · ' + (selected()?.name || '')"
+  [dirty]="false"
+  [busy]="busy()"
+  (closed)="matrixOpen.set(false)"
+>
+  <p class="form-note">{{ selectedPermissionIds().size }} permissions selected</p>
+  <div class="permission-groups">
+    @for (group of permissionGroups(); track group.module) {
+      <section class="permission-group card">
+        <div class="permission-group-heading">
+          <h3>{{ group.module }}</h3>
+          <label class="checkbox-label"
+            ><input
+              type="checkbox"
+              [checked]="group.items.every((item) => checked(item.id))"
+              (change)="toggleModule(group.items, $any($event.target).checked)"
+            />
+            Select all</label
+          >
+        </div>
+        <div class="permission-options">
+          @for (permission of group.items; track permission.id) {
+            <label class="checkbox-label"
+              ><input
+                type="checkbox"
+                [checked]="checked(permission.id)"
+                (change)="toggle(permission.id, $any($event.target).checked)"
+              /><span
+                ><strong>{{ permission.action }}</strong
+                ><small>{{ permission.description }}</small></span
+              ></label
+            >
+          }
+        </div>
+      </section>
+    }
+  </div>
+  <div class="form-actions">
+    <button class="button" type="button" [disabled]="busy()" (click)="savePermissions()">
+      @if (busy()) {
+        <span class="spinner"></span>
+      }
+      Save permissions
+    </button>
+  </div>
+</app-drawer>

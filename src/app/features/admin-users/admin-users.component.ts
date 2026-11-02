@@ -18,6 +18,8 @@ import {
   ActionMenuItem,
 } from '../../shared/components/action-menu/action-menu.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
+import { RbacService } from '../../core/services/rbac.service';
+import type { RbacRole } from '../../core/models/rbac.models';
 @Component({
   selector: 'app-admin-users',
   imports: [
@@ -38,6 +40,7 @@ export class AdminUsersComponent {
   private readonly service = inject(AdminUserService);
   private readonly feedback = inject(FeedbackService);
   private readonly fb = inject(FormBuilder);
+  private readonly rbac = inject(RbacService);
   readonly list = new ListState(
     () => this.service.list(),
     (user, query) =>
@@ -51,9 +54,13 @@ export class AdminUsersComponent {
   readonly selected = signal<AdminUser | null>(null);
   readonly busy = signal(false);
   readonly deleting = signal<string | null>(null);
+  readonly availableRoles = signal<RbacRole[]>([]);
+  readonly roleDrawerOpen = signal(false);
+  readonly assignedRoleIds = signal<Set<string>>(new Set());
   readonly rowActions: ActionMenuItem[] = [
     { id: 'view', label: 'View', icon: 'view' },
     { id: 'edit', label: 'Edit', icon: 'edit' },
+    { id: 'roles', label: 'Assign roles', icon: 'shield' },
     { id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
   ];
   readonly form = this.fb.nonNullable.group({
@@ -67,6 +74,37 @@ export class AdminUsersComponent {
   });
   constructor() {
     void this.list.load();
+  }
+  async assignRoles(user: AdminUser): Promise<void> {
+    this.selected.set(user);
+    try {
+      const roles = await firstValueFrom(this.rbac.roles());
+      this.availableRoles.set(roles.filter((role) => role.isActive && role.code !== 'SUPER_ADMIN'));
+      this.assignedRoleIds.set(new Set((user.roles ?? []).map((role) => role.id)));
+      this.roleDrawerOpen.set(true);
+    } catch (error) {
+      showMutationError(this.feedback, error);
+    }
+  }
+  toggleRole(id: string, checked: boolean): void {
+    const next = new Set(this.assignedRoleIds());
+    checked ? next.add(id) : next.delete(id);
+    this.assignedRoleIds.set(next);
+  }
+  async saveRoles(): Promise<void> {
+    const user = this.selected();
+    if (!user || !this.assignedRoleIds().size || this.busy()) return;
+    this.busy.set(true);
+    try {
+      await firstValueFrom(this.rbac.assignUserRoles(user.id, [...this.assignedRoleIds()]));
+      this.feedback.toast('User roles updated successfully.');
+      this.roleDrawerOpen.set(false);
+      await this.list.load();
+    } catch (error) {
+      showMutationError(this.feedback, error);
+    } finally {
+      this.busy.set(false);
+    }
   }
   edit(user?: AdminUser, view = false): void {
     this.selected.set(user ?? null);
@@ -152,6 +190,7 @@ export class AdminUsersComponent {
   userAction(action: string, user: AdminUser): void {
     if (action === 'view') this.edit(user, true);
     if (action === 'edit') this.edit(user);
+    if (action === 'roles') void this.assignRoles(user);
     if (action === 'delete') void this.remove(user);
   }
 }

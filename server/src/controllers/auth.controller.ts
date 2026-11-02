@@ -70,7 +70,18 @@ export async function changePassword(request: Request, response: Response) {
 export async function me(request: Request, response: Response) {
   const user = await users.findUserById(request.user!.id);
   if (!user) throw new AppError(404, 'User not found.');
-  success(response, 200, 'Current user loaded.', safeUser(user));
+  success(response, 200, 'Current user loaded.', {
+    ...safeUser(user),
+    roles: request.user!.roles ?? [],
+    permissions: request.permissions ?? [],
+  });
+}
+
+export async function permissions(request: Request, response: Response) {
+  success(response, 200, 'Permissions loaded.', {
+    roles: request.user!.roles ?? [],
+    permissions: request.permissions ?? [],
+  });
 }
 export async function updateMe(request: Request, response: Response) {
   const user = await users.updateProfile(

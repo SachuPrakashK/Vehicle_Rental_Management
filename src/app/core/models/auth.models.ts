@@ -11,6 +11,13 @@ export interface AuthUser {
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string | null;
+  roles?: RoleSummary[];
+  permissions?: string[];
+}
+export interface RoleSummary {
+  id: string;
+  name: string;
+  code: string;
 }
 export interface AuthSession {
   user: AuthUser;

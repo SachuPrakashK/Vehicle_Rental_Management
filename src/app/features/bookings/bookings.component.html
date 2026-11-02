@@ -1,8 +1,8 @@
-﻿<app-page-header title="Bookings" description="Every journey, organized in one place."
-  ><a routerLink="/book-vehicle" class="button"
-    ><app-icon name="add" />New booking</a
-  ></app-page-header
->
+﻿<app-page-header title="Bookings" description="Every journey, organized in one place.">
+  @if (permissions.has('bookings.create')) {
+    <a routerLink="/book-vehicle" class="button"><app-icon name="add" />New booking</a>
+  }
+</app-page-header>
 <section class="card">
   <div class="toolbar">
     <app-search
@@ -85,7 +85,7 @@
               <td (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
                 <app-action-menu
                   [label]="'Actions for booking ' + booking.bookingId"
-                  [items]="rowActions"
+                  [items]="rowActions()"
                   [disabled]="deleting() !== null"
                   (selected)="bookingAction($event, booking)"
                 />

@@ -1,5 +1,12 @@
 import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -21,6 +28,7 @@ import {
   ActionMenuItem,
 } from '../../shared/components/action-menu/action-menu.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
+import { PermissionService } from '../../core/services/permission.service';
 @Component({
   selector: 'app-vehicles',
   imports: [
@@ -44,6 +52,7 @@ export class VehiclesComponent {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  readonly permissions = inject(PermissionService);
   readonly yearFilter = signal('');
   readonly typeFilter = signal('');
   readonly currency = environment.currency;
@@ -65,11 +74,15 @@ export class VehiclesComponent {
   readonly imageFile = signal<File | null>(null);
   readonly imagePreview = signal<string | null>(null);
   readonly deleting = signal<number | null>(null);
-  readonly rowActions: ActionMenuItem[] = [
+  readonly rowActions = computed<ActionMenuItem[]>(() => [
     { id: 'view', label: 'View', icon: 'view' },
-    { id: 'edit', label: 'Edit', icon: 'edit' },
-    { id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
-  ];
+    ...(this.permissions.has('vehicles.edit')
+      ? [{ id: 'edit', label: 'Edit', icon: 'edit' as const }]
+      : []),
+    ...(this.permissions.has('vehicles.delete')
+      ? [{ id: 'delete', label: 'Delete', icon: 'delete' as const, destructive: true }]
+      : []),
+  ]);
   readonly drawer = viewChild(DrawerComponent);
   readonly form = this.fb.nonNullable.group({
     carId: [0],
@@ -102,6 +115,7 @@ export class VehiclesComponent {
     if (vehicle) this.edit(vehicle, true);
   }
   edit(vehicle?: Vehicle, view = false): void {
+    if (!view && !this.permissions.has(vehicle ? 'vehicles.edit' : 'vehicles.create')) return;
     this.clearSelectedImage();
     this.viewing.set(view);
     this.selected.set(vehicle || null);
@@ -138,6 +152,7 @@ export class VehiclesComponent {
     return this.busy() || (this.open() && !this.viewing() && this.form.dirty);
   }
   async save(): Promise<void> {
+    if (!this.permissions.has(this.selected() ? 'vehicles.edit' : 'vehicles.create')) return;
     if (this.busy()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
@@ -175,6 +190,7 @@ export class VehiclesComponent {
     }
   }
   async remove(vehicle: Vehicle): Promise<void> {
+    if (!this.permissions.has('vehicles.delete')) return;
     if (
       this.deleting() !== null ||
       !(await this.feedback.confirm(

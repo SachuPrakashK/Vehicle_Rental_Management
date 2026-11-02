@@ -1,10 +1,11 @@
 ﻿<app-page-header
   title="Customers"
   description="Good relationships begin with keeping the details together."
-  ><button class="button" (click)="edit()">
-    <app-icon name="add" />Add customer
-  </button></app-page-header
 >
+  @if (permissions.has('customers.create')) {
+    <button class="button" (click)="edit()"><app-icon name="add" />Add customer</button>
+  }
+</app-page-header>
 <section class="card">
   <div class="toolbar">
     <app-search
@@ -25,7 +26,7 @@
   } @else if (!list.filtered().length) {
     <app-empty-state
       description="Add a customer or try a different search."
-      actionLabel="Add customer"
+      [actionLabel]="permissions.has('customers.create') ? 'Add customer' : ''"
       (action)="edit()"
     />
   } @else {
@@ -68,7 +69,7 @@
               <td (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
                 <app-action-menu
                   [label]="'Actions for ' + customer.customerName"
-                  [items]="rowActions"
+                  [items]="rowActions()"
                   [disabled]="deleting() !== null"
                   (selected)="customerAction($event, customer)"
                 />

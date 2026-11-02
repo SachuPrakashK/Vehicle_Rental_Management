@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CustomerService } from '../../core/services/customer.service';
@@ -17,6 +24,7 @@ import {
   ActionMenuItem,
 } from '../../shared/components/action-menu/action-menu.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
+import { PermissionService } from '../../core/services/permission.service';
 @Component({
   selector: 'app-customers',
   imports: [
@@ -38,6 +46,7 @@ export class CustomersComponent {
   private readonly feedback = inject(FeedbackService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  readonly permissions = inject(PermissionService);
   readonly list = new ListState(
     () => this.service.list(),
     (customer, query) =>
@@ -51,12 +60,18 @@ export class CustomersComponent {
   readonly selected = signal<Customer | null>(null);
   readonly busy = signal(false);
   readonly deleting = signal<number | null>(null);
-  readonly rowActions: ActionMenuItem[] = [
+  readonly rowActions = computed<ActionMenuItem[]>(() => [
     { id: 'view', label: 'View', icon: 'view' },
-    { id: 'edit', label: 'Edit', icon: 'edit' },
-    { id: 'ledger', label: 'Ledger', icon: 'ledger' },
-    { id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
-  ];
+    ...(this.permissions.has('customers.edit')
+      ? [{ id: 'edit', label: 'Edit', icon: 'edit' as const }]
+      : []),
+    ...(this.permissions.has('ledger.view')
+      ? [{ id: 'ledger', label: 'Ledger', icon: 'ledger' as const }]
+      : []),
+    ...(this.permissions.has('customers.delete')
+      ? [{ id: 'delete', label: 'Delete', icon: 'delete' as const, destructive: true }]
+      : []),
+  ]);
   readonly customerForm = viewChild(CustomerFormComponent);
   constructor() {
     void this.initialize();
@@ -68,6 +83,7 @@ export class CustomersComponent {
     if (customer) this.edit(customer, true);
   }
   edit(customer?: Customer, view = false): void {
+    if (!view && !this.permissions.has(customer ? 'customers.edit' : 'customers.create')) return;
     this.selected.set(customer || null);
     this.viewing.set(view);
     this.open.set(true);
@@ -80,6 +96,7 @@ export class CustomersComponent {
     await this.list.load();
   }
   async remove(customer: Customer): Promise<void> {
+    if (!this.permissions.has('customers.delete')) return;
     if (
       this.deleting() !== null ||
       !(await this.feedback.confirm(

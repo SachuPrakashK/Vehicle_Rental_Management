@@ -30,7 +30,7 @@
             <th>User</th>
             <th>Email</th>
             <th>Phone</th>
-            <th>Role</th>
+            <th>Roles</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -42,7 +42,9 @@
               <td>{{ user.email }}</td>
               <td>{{ user.phone || 'Not provided' }}</td>
               <td>
-                <span class="badge neutral">{{ user.role }}</span>
+                @for (role of user.roles || []; track role.id) {
+                  <span class="badge neutral">{{ role.name }}</span>
+                }
               </td>
               <td>
                 <span [class]="user.isActive ? 'badge' : 'badge neutral'">{{
@@ -169,5 +171,46 @@
         </button>
       </div>
     </form>
+  }
+</app-drawer>
+<app-drawer
+  [open]="roleDrawerOpen()"
+  title="Assign roles"
+  [busy]="busy()"
+  (closed)="roleDrawerOpen.set(false)"
+>
+  @if (selected(); as user) {
+    <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+    <p class="form-note">
+      Select one or more active roles. Changes take effect on the next request.
+    </p>
+    <div class="permission-options">
+      @for (role of availableRoles(); track role.id) {
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [checked]="assignedRoleIds().has(role.id)"
+            (change)="toggleRole(role.id, $any($event.target).checked)"
+          />
+          <span
+            ><strong>{{ role.name }}</strong
+            ><small>{{ role.description || role.code }}</small></span
+          >
+        </label>
+      }
+    </div>
+    <div class="form-actions">
+      <button
+        class="button"
+        type="button"
+        [disabled]="!assignedRoleIds().size || busy()"
+        (click)="saveRoles()"
+      >
+        @if (busy()) {
+          <span class="spinner"></span>
+        }
+        Save roles
+      </button>
+    </div>
   }
 </app-drawer>

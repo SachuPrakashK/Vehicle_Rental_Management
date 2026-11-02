@@ -1,8 +1,8 @@
-﻿<app-page-header title="Your fleet" description="A well-organized fleet starts with the details."
-  ><button class="button" (click)="edit()">
-    <app-icon name="add" />Add vehicle
-  </button></app-page-header
->
+﻿<app-page-header title="Your fleet" description="A well-organized fleet starts with the details.">
+  @if (permissions.has('vehicles.create')) {
+    <button class="button" (click)="edit()"><app-icon name="add" />Add vehicle</button>
+  }
+</app-page-header>
 <section class="card">
   <div class="toolbar">
     <app-search
@@ -46,7 +46,7 @@
   } @else if (!list.filtered().length) {
     <app-empty-state
       description="Add your first vehicle, or try another search."
-      actionLabel="Add vehicle"
+      [actionLabel]="permissions.has('vehicles.create') ? 'Add vehicle' : ''"
       (action)="edit()"
     />
   } @else {
@@ -101,7 +101,7 @@
               <td (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
                 <app-action-menu
                   [label]="'Actions for ' + vehicle.model"
-                  [items]="rowActions"
+                  [items]="rowActions()"
                   [disabled]="deleting() !== null"
                   (selected)="vehicleAction($event, vehicle)"
                 />
@@ -157,7 +157,9 @@
           <dd>{{ vehicle.dailyRate | currency: currency }}</dd>
         </div>
       </dl>
-      <button class="button" (click)="edit(vehicle)"><app-icon name="edit" />Edit vehicle</button>
+      @if (permissions.has('vehicles.edit')) {
+        <button class="button" (click)="edit(vehicle)"><app-icon name="edit" />Edit vehicle</button>
+      }
     }
   } @else {
     <form id="vehicle-form" [formGroup]="form" (ngSubmit)="save()" novalidate>

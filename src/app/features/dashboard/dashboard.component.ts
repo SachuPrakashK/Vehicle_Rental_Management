@@ -11,6 +11,7 @@ import { environment } from '../../../environments/environment';
 import { BookingOverviewComponent } from './components/booking-overview/booking-overview.component';
 import { DashboardStatisticsComponent } from './components/dashboard-statistics/dashboard-statistics.component';
 import { RecentBookingsComponent } from './components/recent-bookings/recent-bookings.component';
+import { PermissionService } from '../../core/services/permission.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,6 +26,7 @@ import { RecentBookingsComponent } from './components/recent-bookings/recent-boo
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {
+  readonly permissions = inject(PermissionService);
   private readonly service = inject(DashboardService);
   private readonly bookingService = inject(BookingService);
   private readonly vehicleService = inject(VehicleService);
