@@ -45,7 +45,7 @@ export async function forgotPassword(request: Request, response: Response) {
   success(
     response,
     200,
-    'If an account exists for this email, password reset instructions have been sent.',
+    'If an account exists with this email address, you will receive a password reset link shortly.',
     data,
   );
 }

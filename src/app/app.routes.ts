@@ -9,11 +9,13 @@ export const routes: Routes = [
     children: [
       {
         path: 'login',
+        title: 'Login',
         loadComponent: () =>
           import('./features/auth/pages/login/login.component').then((m) => m.LoginComponent),
       },
       {
         path: 'register',
+        title: 'Register',
         loadComponent: () =>
           import('./features/auth/pages/register/register.component').then(
             (m) => m.RegisterComponent,
@@ -21,6 +23,7 @@ export const routes: Routes = [
       },
       {
         path: 'forgot-password',
+        title: 'Forgot Password',
         loadComponent: () =>
           import('./features/auth/pages/forgot-password/forgot-password.component').then(
             (m) => m.ForgotPasswordComponent,
@@ -28,6 +31,7 @@ export const routes: Routes = [
       },
       {
         path: 'reset-password',
+        title: 'Reset Password',
         loadComponent: () =>
           import('./features/auth/pages/reset-password/reset-password.component').then(
             (m) => m.ResetPasswordComponent,
@@ -44,45 +48,53 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
+        title: 'Dashboard',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
         path: 'vehicles',
+        title: 'Vehicles',
         canDeactivate: [unsavedGuard],
         loadComponent: () =>
           import('./features/vehicles/vehicles.component').then((m) => m.VehiclesComponent),
       },
       {
         path: 'customers/:id',
+        title: 'Customer Details',
         canDeactivate: [unsavedGuard],
         loadComponent: () =>
           import('./features/customers/customers.component').then((m) => m.CustomersComponent),
       },
       {
         path: 'customers',
+        title: 'Customers',
         canDeactivate: [unsavedGuard],
         loadComponent: () =>
           import('./features/customers/customers.component').then((m) => m.CustomersComponent),
       },
       {
         path: 'book-vehicle',
+        title: 'Book Vehicle',
         canDeactivate: [unsavedGuard],
         loadComponent: () =>
           import('./features/bookings/book-vehicle.component').then((m) => m.BookVehicleComponent),
       },
       {
         path: 'bookings/:id',
+        title: 'Booking Details',
         loadComponent: () =>
           import('./features/bookings/bookings.component').then((m) => m.BookingsComponent),
       },
       {
         path: 'bookings',
+        title: 'Bookings',
         loadComponent: () =>
           import('./features/bookings/bookings.component').then((m) => m.BookingsComponent),
       },
       {
         path: 'customer-ledger',
+        title: 'Customer Ledger',
         loadComponent: () =>
           import('./features/customer-ledger/customer-ledger.component').then(
             (m) => m.CustomerLedgerComponent,
@@ -90,6 +102,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin-users',
+        title: 'Admin Users',
         canActivate: [superAdminGuard],
         canDeactivate: [unsavedGuard],
         loadComponent: () =>
@@ -97,12 +110,14 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
+        title: 'My Profile',
         canDeactivate: [unsavedGuard],
         loadComponent: () =>
           import('./features/profile/profile.component').then((m) => m.ProfileComponent),
       },
       {
         path: 'not-found',
+        title: 'Page Not Found',
         loadComponent: () =>
           import('./shared/components/not-found/not-found.component').then(
             (m) => m.NotFoundComponent,

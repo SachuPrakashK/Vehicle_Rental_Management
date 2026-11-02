@@ -62,7 +62,10 @@
       placeholder="Re-enter password"
       autocomplete="new-password"
     />
-    @if (form.hasError('passwordMismatch') && form.controls.confirmPassword.touched) {
+    @if (
+      form.hasError('passwordMismatch') &&
+      (form.controls.confirmPassword.touched || form.controls.confirmPassword.dirty)
+    ) {
       <small class="field-error">Passwords must match.</small>
     }
     <p class="form-note">

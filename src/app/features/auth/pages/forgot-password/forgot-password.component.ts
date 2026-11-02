@@ -27,6 +27,8 @@ export class ForgotPasswordComponent {
   private readonly fb = inject(FormBuilder);
   readonly busy = signal(false);
   readonly error = signal('');
+  readonly submitted = signal(false);
+  readonly developmentResetToken = signal('');
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
   });
@@ -35,21 +37,24 @@ export class ForgotPasswordComponent {
     if (this.form.invalid || this.busy()) return;
     this.busy.set(true);
     this.error.set('');
+    this.submitted.set(false);
     try {
       const result = await firstValueFrom(this.auth.forgotPassword(this.form.controls.email.value));
+      this.submitted.set(true);
+      this.developmentResetToken.set(result.resetToken ?? '');
       this.feedback.toast(
-        'If an account exists, password reset instructions have been sent.',
+        'If an account exists with this email address, you will receive a password reset link shortly.',
         'info',
       );
-      if (result.resetToken) {
-        await this.router.navigate(['/auth/reset-password'], {
-          queryParams: { token: result.resetToken },
-        });
-      }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Unable to request a reset link.');
     } finally {
       this.busy.set(false);
     }
+  }
+  async continueDevelopmentReset(): Promise<void> {
+    await this.router.navigate(['/auth/reset-password'], {
+      queryParams: { token: this.developmentResetToken() },
+    });
   }
 }

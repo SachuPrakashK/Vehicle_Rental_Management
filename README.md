@@ -34,7 +34,7 @@ npm run db:seed
 npm start
 ```
 
-`npm start` launches Angular and the authentication API together. Angular runs at http://localhost:4200, proxies `/api` to the API at http://localhost:3000, and the Docker PostgreSQL instance is published on port 5433. Generate a strong random JWT_ACCESS_SECRET and replace the bootstrap password before running the seed. Never commit server/.env.
+`npm start` launches Angular and the authentication API together. Angular runs at http://localhost:4200, proxies `/api` to the API at http://localhost:3000, and the Docker PostgreSQL instance is published on port 5435. Generate a strong random JWT_ACCESS_SECRET and replace the bootstrap password before running the seed. Never commit server/.env.
 
 ## Environment configuration
 

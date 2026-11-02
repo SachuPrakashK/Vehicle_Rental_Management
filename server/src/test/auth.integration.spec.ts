@@ -118,10 +118,33 @@ describe('authentication API', () => {
     await request(app).post('/api/auth/refresh-token').set('Cookie', cookie).expect(401);
   });
   it('uses generic forgot responses and single-use reset tokens', async () => {
+    await request(app).post('/api/auth/forgot-password').send({ email: '' }).expect(422);
+    await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'invalid-email' })
+      .expect(422);
     const unknown = await request(app)
       .post('/api/auth/forgot-password')
       .send({ email: 'unknown@example.com' })
       .expect(200);
+    const expired = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'sachu@example.com' })
+      .expect(200);
+    expect(unknown.body.message).toBe(expired.body.message);
+    const expiredToken = expired.body.data.resetToken as string;
+    await pool.query(
+      "UPDATE password_reset_tokens SET expires_at=now()-interval '1 minute' WHERE user_id=$1 AND used_at IS NULL",
+      [userId],
+    );
+    await request(app)
+      .post('/api/auth/verify-reset-token')
+      .send({ token: expiredToken })
+      .expect(400);
+    await request(app)
+      .post('/api/auth/verify-reset-token')
+      .send({ token: 'x'.repeat(64) })
+      .expect(400);
     const known = await request(app)
       .post('/api/auth/forgot-password')
       .send({ email: 'sachu@example.com' })
@@ -130,6 +153,14 @@ describe('authentication API', () => {
     const resetToken = known.body.data.resetToken as string;
     await request(app).post('/api/auth/verify-reset-token').send({ token: resetToken }).expect(200);
     const newPassword = 'NewPassword@123';
+    await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: resetToken, password: 'weak', confirmPassword: 'weak' })
+      .expect(422);
+    await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: resetToken, password: newPassword, confirmPassword: password })
+      .expect(422);
     await request(app)
       .post('/api/auth/reset-password')
       .send({ token: resetToken, password: newPassword, confirmPassword: newPassword })

@@ -63,6 +63,12 @@ export const env = parsed.data;
 if (env.NODE_ENV === 'production' && (!env.SMTP_HOST || !env.SMTP_PORT || !env.SMTP_FROM)) {
   throw new Error('SMTP configuration is required in production.');
 }
+if (env.SMTP_HOST && (!env.SMTP_PORT || !env.SMTP_FROM)) {
+  throw new Error('SMTP_PORT and SMTP_FROM are required when SMTP_HOST is configured.');
+}
+if (!!env.SMTP_USER !== !!env.SMTP_PASSWORD) {
+  throw new Error('SMTP_USER and SMTP_PASSWORD must be configured together.');
+}
 if (env.COOKIE_SAME_SITE === 'none' && !env.COOKIE_SECURE) {
   throw new Error('SameSite=None cookies must be Secure.');
 }
