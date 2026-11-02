@@ -42,7 +42,7 @@
   }
   .sidebar,
   .collapsed .sidebar {
-    width: 236px;
+    width: min(300px, 88vw);
     transform: translateX(-100%);
     transition: transform 0.2s;
   }
@@ -56,6 +56,7 @@
     background: var(--overlay);
     z-index: 39;
     border: 0;
+    cursor: default;
   }
   .collapsed .nav-label,
   .collapsed .sidebar-section,
@@ -71,6 +72,9 @@
   }
   .topbar {
     height: 68px;
+    position: sticky;
+    top: 0;
+    z-index: 35;
   }
   .profile-grid {
     grid-template-columns: 1fr;
@@ -208,14 +212,17 @@
   .auth-layout {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: 100dvh;
+    min-height: max(100vh, 100dvh);
     overflow: visible;
   }
   .auth-story {
     display: none;
   }
+  .auth-layout > app-auth-visual {
+    display: none;
+  }
   .auth-form-side {
-    min-height: 100dvh;
+    min-height: max(100vh, 100dvh);
     padding: 30px 24px;
     overflow: visible;
   }
@@ -244,5 +251,177 @@
   }
   .spinner {
     animation: spin 2s linear infinite;
+  }
+}
+@media (max-width: 1023px) {
+  .stats-grid {
+    gap: 16px;
+  }
+  .card-body,
+  .card-heading {
+    padding-inline: 20px;
+  }
+  .toolbar {
+    padding: 18px 20px;
+  }
+}
+@media (max-width: 767px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .toolbar {
+    align-items: stretch;
+  }
+  .toolbar > app-search,
+  .toolbar-left,
+  .toolbar-filters {
+    flex: 1 1 100%;
+  }
+  .toolbar .search-field,
+  .toolbar app-search {
+    width: 100%;
+  }
+  .profile-grid,
+  .booking-grid,
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .data-modal {
+    max-height: calc(100dvh - 24px);
+    width: calc(100% - 24px);
+  }
+  .modal-content {
+    max-height: calc(100dvh - 170px);
+  }
+  .auth-layout {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: max(100vh, 100dvh);
+    overflow: visible;
+  }
+  .auth-story {
+    display: none;
+  }
+  .auth-form-side {
+    min-height: max(100vh, 100dvh);
+    padding: 32px clamp(24px, 8vw, 56px);
+    overflow: visible;
+  }
+  .auth-mobile-logo {
+    display: block;
+    width: 150px;
+    margin-bottom: 32px;
+  }
+}
+@media (max-width: 600px) {
+  .heading-actions .button {
+    flex: 1 1 auto;
+  }
+  .loading-state,
+  .empty-state {
+    padding: 40px 20px;
+  }
+  .modal-heading,
+  .modal-footer,
+  .modal-form {
+    padding: 16px;
+  }
+  .modal-footer .button {
+    flex: 1 1 120px;
+  }
+  .confirmation {
+    padding: 22px;
+  }
+  .toast-stack {
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: calc(100% - 24px);
+  }
+}
+@media (max-width: 479px) {
+  main {
+    padding: 18px 12px 24px;
+  }
+  .topbar {
+    padding: 0 12px;
+  }
+  .header-label {
+    display: none;
+  }
+  .profile-toggle {
+    gap: 6px;
+  }
+  .profile-toggle > app-icon:last-child {
+    display: none;
+  }
+  .stats-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stat-card {
+    padding: 18px;
+  }
+  .page-heading {
+    margin-bottom: 18px;
+  }
+  .heading-actions,
+  .heading-actions .button {
+    width: 100%;
+  }
+  .card-heading,
+  .card-body,
+  .toolbar {
+    padding: 16px;
+  }
+  .chart-heading-actions,
+  .chart-heading-actions .compact-field,
+  .chart-heading-actions .compact-field select,
+  .chart-heading-actions .button {
+    width: 100%;
+  }
+  .toolbar-filters > *,
+  .date-filter-display {
+    width: 100%;
+  }
+  .pagination .button {
+    padding-inline: 12px;
+  }
+  .drawer-header,
+  .drawer-content {
+    padding: 18px 16px;
+  }
+  .drawer-footer {
+    padding: 14px 16px max(14px, env(safe-area-inset-bottom));
+  }
+  .drawer-footer .button {
+    flex: 1 1 120px;
+  }
+  .auth-form-side {
+    padding: 24px 18px;
+  }
+  .auth-mobile-logo {
+    width: 132px;
+    margin-bottom: 28px;
+  }
+  .auth-form-container form {
+    margin-top: 22px;
+  }
+  .page-footer {
+    font-size: 9px;
+  }
+}
+@media (max-width: 374px) {
+  .button {
+    padding-inline: 13px;
+  }
+  .drawer-footer {
+    flex-direction: column-reverse;
+  }
+  .drawer-footer .button {
+    width: 100%;
+    flex-basis: auto;
+  }
+  .summary-line {
+    align-items: flex-start;
+    gap: 8px;
+    flex-direction: column;
   }
 }

@@ -10,6 +10,7 @@ export const authLimiter = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: response,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 export const passwordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -17,4 +18,5 @@ export const passwordLimiter = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: response,
+  skip: () => process.env.NODE_ENV === 'test',
 });

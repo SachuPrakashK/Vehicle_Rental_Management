@@ -2,7 +2,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 .card-body {
@@ -24,7 +24,7 @@
 }
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 19px;
   margin: 25px 0;
 }
@@ -32,6 +32,7 @@
   padding: 21px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
 }
 .stat-card.primary {
   background: var(--pastel-primary);
@@ -97,6 +98,16 @@
   padding: 15px;
   border-radius: 8px;
   color: var(--text-primary);
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.15s;
+}
+.quick-action:hover,
+.quick-action:focus-visible {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  background: var(--pastel-primary);
+  transform: translateY(-1px);
 }
 .quick-action > app-icon {
   color: var(--primary);

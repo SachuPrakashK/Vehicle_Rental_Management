@@ -151,7 +151,11 @@ export async function forgotPassword(email: string): Promise<{ resetToken?: stri
   } finally {
     client.release();
   }
-  await emailService.sendPasswordReset({ email: user.email, token });
+  try {
+    await emailService.sendPasswordReset({ email: user.email, token });
+  } catch {
+    process.stderr.write('Password reset email delivery failed.\n');
+  }
   return env.NODE_ENV !== 'production' && env.EXPOSE_DEVELOPMENT_RESET_TOKEN
     ? { resetToken: token }
     : {};

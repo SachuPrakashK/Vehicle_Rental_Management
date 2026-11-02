@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
@@ -13,6 +14,7 @@ import { IconComponent, IconName } from '../../shared/icons/icon.component';
 })
 export class MainLayoutComponent {
   readonly auth = inject(AuthService);
+  private readonly document = inject(DOCUMENT);
   readonly collapsed = signal(false);
   readonly mobileOpen = signal(false);
   readonly profileOpen = signal(false);
@@ -45,6 +47,10 @@ export class MainLayoutComponent {
         takeUntilDestroyed(),
       )
       .subscribe(() => this.closeMenus());
+    effect(() => {
+      this.document.body.classList.toggle('navigation-open', this.mobileOpen());
+      return () => this.document.body.classList.remove('navigation-open');
+    });
   }
   toggleSidebar(): void {
     if (window.matchMedia('(max-width: 850px)').matches) this.mobileOpen.update((value) => !value);

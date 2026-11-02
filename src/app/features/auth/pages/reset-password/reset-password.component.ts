@@ -4,7 +4,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { FeedbackService } from '../../../../core/services/feedback.service';
-import { FieldErrorComponent } from '../../../../shared/components/field-error/field-error.component';
 import { IconComponent } from '../../../../shared/icons/icon.component';
 import { passwordMatch, passwordValidator } from '../../../../shared/utils/validators';
 import { AuthLayoutComponent } from '../../components/auth-layout/auth-layout.component';
@@ -15,7 +14,6 @@ import { PasswordFieldComponent } from '../../components/password-field/password
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    FieldErrorComponent,
     IconComponent,
     AuthLayoutComponent,
     PasswordFieldComponent,
@@ -30,15 +28,35 @@ export class ResetPasswordComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   readonly busy = signal(false);
+  readonly verifying = signal(true);
+  readonly tokenValid = signal(false);
   readonly error = signal('');
+  readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
   readonly form = this.fb.nonNullable.group(
     {
-      token: [this.route.snapshot.queryParamMap.get('token') ?? '', Validators.required],
       password: ['', [Validators.required, passwordValidator]],
       confirmPassword: ['', Validators.required],
     },
     { validators: passwordMatch },
   );
+  constructor() {
+    void this.verifyToken();
+  }
+  private async verifyToken(): Promise<void> {
+    if (!this.token) {
+      this.error.set('This password reset link is invalid or has expired.');
+      this.verifying.set(false);
+      return;
+    }
+    try {
+      await firstValueFrom(this.auth.verifyResetToken(this.token));
+      this.tokenValid.set(true);
+    } catch {
+      this.error.set('This password reset link is invalid or has expired.');
+    } finally {
+      this.verifying.set(false);
+    }
+  }
   async submit(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid || this.busy()) return;
@@ -47,7 +65,7 @@ export class ResetPasswordComponent {
     const value = this.form.getRawValue();
     try {
       await firstValueFrom(
-        this.auth.resetPassword(value.token, value.password, value.confirmPassword),
+        this.auth.resetPassword(this.token, value.password, value.confirmPassword),
       );
       this.feedback.toast('Password reset successfully. Please sign in.');
       await this.router.navigateByUrl('/auth/login');

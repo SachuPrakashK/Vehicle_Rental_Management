@@ -11,14 +11,14 @@ p {
   margin-top: 0;
 }
 h1 {
-  font-size: 27px;
+  font-size: clamp(24px, 2vw, 30px);
   font-weight: 600;
   letter-spacing: -0.8px;
   margin-bottom: 6px;
   line-height: 1.35;
 }
 h2 {
-  font-size: 17px;
+  font-size: clamp(17px, 1.3vw, 20px);
   font-weight: 600;
   letter-spacing: -0.3px;
   margin-bottom: 6px;

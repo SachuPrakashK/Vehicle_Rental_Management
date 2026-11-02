@@ -1,6 +1,6 @@
 .app-shell {
   --sidebar-width: 236px;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 .app-shell.collapsed {
   --sidebar-width: 78px;
@@ -50,6 +50,10 @@
   border-radius: 7px;
   font-size: 12px;
   white-space: nowrap;
+  min-height: 44px;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .sidebar-nav a:hover {
   background: var(--background);
@@ -103,6 +107,7 @@
   height: 76px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -137,6 +142,7 @@
   color: var(--text-primary);
   font-size: 11px;
   text-align: left;
+  min-height: 44px;
 }
 .profile-toggle small {
   display: block;
@@ -172,8 +178,10 @@
   background: var(--background);
 }
 main {
-  padding: 23px 34px 32px;
-  max-width: 1600px;
+  width: 100%;
+  min-width: 0;
+  padding: clamp(20px, 2.2vw, 34px);
+  max-width: var(--content-max);
   margin: auto;
 }
 .page-heading {
@@ -181,7 +189,7 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 24px;
+  margin-bottom: clamp(20px, 2.5vw, 30px);
 }
 .page-heading p {
   margin: 0;
@@ -191,6 +199,7 @@ main {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 .toolbar {
   display: flex;
@@ -198,11 +207,15 @@ main {
   align-items: center;
   justify-content: space-between;
   padding: 20px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .toolbar-left {
   display: flex;
   gap: 12px;
   align-items: center;
+  min-width: 0;
+  flex: 1 1 260px;
 }
 .toolbar-filters {
   display: flex;
@@ -210,6 +223,8 @@ main {
   justify-content: flex-end;
   gap: 12px;
   margin-left: auto;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .toolbar .select-control {
   width: auto;

@@ -120,6 +120,7 @@ async function signIn(page: import('@playwright/test').Page): Promise<void> {
 test('signs in and renders dashboard data', async ({ page }) => {
   await signIn(page);
   await expect(page.getByText('Total vehicles')).toBeVisible();
+  await expect(page).toHaveTitle('Dashboard | Fleetline');
   await expect(page.getByText('Rent-1001')).toBeVisible();
   const period = page.getByLabel('Booking overview period');
   await expect(period).toHaveValue('6');
@@ -194,24 +195,128 @@ test('booking rows navigate while actions stay on the listing', async ({ page })
 test('authentication pages retain focused forms and shared layout', async ({ page }) => {
   await page.goto('/auth/login');
   await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+  await expect(page).toHaveTitle('Login | Fleetline');
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeDisabled();
   await page.goto('/auth/register');
   await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
+  await expect(page).toHaveTitle('Register | Fleetline');
   await expect(page.getByRole('button', { name: 'Create account' })).toBeDisabled();
   await page.goto('/auth/forgot-password');
   await expect(page.getByRole('heading', { name: 'Forgot your password?' })).toBeVisible();
+  await expect(page).toHaveTitle('Forgot Password | Fleetline');
   await page.goto('/auth/reset-password?token=test-token');
   await expect(page.getByRole('heading', { name: 'Set a new password' })).toBeVisible();
+  await expect(page).toHaveTitle('Reset Password | Fleetline');
+});
+
+test('password recovery presents confirmation and validates reset form', async ({ page }) => {
+  await page.goto('/auth/forgot-password');
+  await expect(page.getByRole('button', { name: 'Send reset link' })).toBeDisabled();
+  await page.getByLabel('Email address').fill('manager@example.com');
+  await page.getByRole('button', { name: 'Send reset link' }).click();
+  await expect(page.locator('.notice[role="status"]')).toContainText(
+    'If an account exists with this email address, you will receive a password reset link shortly.',
+  );
+
+  await page.goto('/auth/reset-password?token=' + 'x'.repeat(64));
+  await expect(page.getByLabel('New password')).toBeVisible();
+  await page.getByLabel('New password').fill('UpdatedPassword@123');
+  await page.getByLabel('Confirm password').fill('DifferentPassword@123');
+  await expect(page.getByText('Passwords must match.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reset password' })).toBeDisabled();
+  await page.getByLabel('Confirm password').fill('UpdatedPassword@123');
+  await page.getByRole('button', { name: 'Show password' }).first().click();
+  await expect(page.getByLabel('New password')).toHaveAttribute('type', 'text');
+  await page.getByRole('button', { name: 'Reset password' }).click();
+  await expect(page).toHaveURL(/\/auth\/login$/);
+  await expect(page).toHaveTitle('Login | Fleetline');
+});
+
+test('browser titles follow direct, nested, and history navigation', async ({ page }) => {
+  await signIn(page);
+  const routes: Array<[string, string]> = [
+    ['/vehicles', 'Vehicles | Fleetline'],
+    ['/customers', 'Customers | Fleetline'],
+    ['/customers/1', 'Customer Details | Fleetline'],
+    ['/book-vehicle', 'Book Vehicle | Fleetline'],
+    ['/bookings', 'Bookings | Fleetline'],
+    ['/bookings/1', 'Booking Details | Fleetline'],
+    ['/customer-ledger', 'Customer Ledger | Fleetline'],
+    ['/profile', 'My Profile | Fleetline'],
+  ];
+  for (const [route, title] of routes) {
+    await page.goto(route);
+    await expect(page).toHaveTitle(title);
+  }
+  await page.goBack();
+  await expect(page).toHaveTitle('Customer Ledger | Fleetline');
+  await page.goForward();
+  await expect(page).toHaveTitle('My Profile | Fleetline');
+});
+
+test('primary routes do not create page-level horizontal overflow', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  const viewports = [
+    { width: 320, height: 720 },
+    { width: 375, height: 812 },
+    { width: 425, height: 860 },
+    { width: 768, height: 1024 },
+    { width: 1024, height: 768 },
+    { width: 1280, height: 800 },
+    { width: 1440, height: 900 },
+    { width: 1920, height: 1080 },
+  ];
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await page.goto('/auth/login');
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    const overflow = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      page: document.documentElement.scrollWidth,
+    }));
+    expect(overflow.page).toBeLessThanOrEqual(overflow.viewport);
+    if (viewport.width === 768) {
+      const visualHeight = await page
+        .locator('.auth-story')
+        .evaluate((element) => Math.round(element.getBoundingClientRect().height));
+      expect(visualHeight).toBe(viewport.height);
+    }
+  }
+  await page.setViewportSize({ width: 320, height: 720 });
+  await signIn(page);
+  for (const route of [
+    '/dashboard',
+    '/vehicles',
+    '/bookings',
+    '/customers',
+    '/book-vehicle',
+    '/customer-ledger',
+    '/profile',
+  ]) {
+    await page.goto(route);
+    await expect(page.locator('#main-content')).toBeVisible();
+    const overflow = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      page: document.documentElement.scrollWidth,
+    }));
+    expect(overflow.page, `${route} overflowed at 320px`).toBeLessThanOrEqual(overflow.viewport);
+  }
 });
 
 test('mobile navigation opens and reaches customers', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile');
   await signIn(page);
   await page.getByRole('button', { name: 'Toggle navigation' }).click();
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.body).overflow))
+    .toBe('hidden');
   const customerLink = page
     .locator('#main-navigation')
     .getByRole('link', { name: 'Customers', exact: true });
   await expect(customerLink).toBeVisible();
   await customerLink.click();
   await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.body).overflow))
+    .not.toBe('hidden');
 });
