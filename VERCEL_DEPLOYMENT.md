@@ -82,7 +82,7 @@ No existing uploaded file is migrated or deleted automatically.
 - CORS accepts only `FRONTEND_ORIGIN` and the exact Vercel preview URL.
 - Helmet and Vercel response headers provide baseline browser hardening.
 - SMTP configuration is optional for API availability and required for password-reset email delivery. Partially configured SMTP settings fail startup validation.
-- Preview uses a test-only Ethereal SMTP account. Production SMTP remains intentionally unset pending a provider account and an owned, verified sending domain. The Vercel account had no owned domains when checked on 30 October 2026; the available Resend integration cannot be provisioned honestly without one.
+- Preview uses a test-only Ethereal SMTP account. Production uses Brevo SMTP credentials stored as protected Vercel environment variables. Password-reset delivery to the existing production account was accepted on 4 November 2026 without exposing the recipient or SMTP credentials.
 
 Endpoint-specific application limits remain in process memory. A global Vercel Firewall rule named `Fleetline API global rate limit` was published on 30 October 2026 and limits paths beginning with `/api` to 100 requests per 60 seconds per IP, denying excess traffic across all serverless instances.
 
@@ -125,7 +125,7 @@ Verified Preview URL:
 
 `https://fleetline-ennc0i3k9-sachuprakashk-4789s-projects.vercel.app`
 
-The canonical Production alias is `https://fleetline-rental-management.vercel.app`, and `FRONTEND_ORIGIN` is configured to match it. The first plain `vercel deploy` was unexpectedly assigned to Vercel's Production target because it was the project's first deployment, despite not using `--prod`. Production SMTP remains unset, so password-reset email delivery is unavailable until a sender is configured; core API availability is not coupled to SMTP.
+The canonical Production alias is `https://fleetline-rental-management.vercel.app`, and `FRONTEND_ORIGIN` is configured to match it. Production Brevo SMTP is configured through protected Vercel environment variables. Core API availability remains decoupled from SMTP so a mail-provider outage cannot disable authentication or health checks.
 
 For another Preview deployment:
 
