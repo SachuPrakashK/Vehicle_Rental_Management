@@ -20,17 +20,12 @@
       @for (alert of alerts(); track alert.id) {
         <tr>
           <td>
-            <span
-              class="status"
-              [class.warning]="alert.severity === 'WARNING'"
-              [class.error]="alert.severity === 'CRITICAL'"
-              >{{ alert.severity }}</span
-            >
+            <span class="fleet-status" [ngClass]="alert.severity | fleetStatusClass">{{ alert.severity | fleetStatus }}</span>
           </td>
           <td>{{ alert.registrationNumber ?? 'Fleet' }}</td>
           <td>{{ alert.message }}</td>
           <td>{{ alert.createdAt | date: 'medium' }}</td>
-          <td>{{ alert.status }}</td>
+          <td><span class="fleet-status" [ngClass]="alert.status | fleetStatusClass">{{ alert.status | fleetStatus }}</span></td>
           <td>
             @if (alert.status === 'OPEN' && canAcknowledge()) {
               <button

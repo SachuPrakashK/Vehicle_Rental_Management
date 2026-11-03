@@ -1,3 +1,6 @@
+import { NgClass } from '@angular/common';
+import { FleetStatusPipe } from '../../fleet-status.pipe';
+import { FleetStatusClassPipe } from '../../fleet-status-class.pipe';
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -6,7 +9,7 @@ import type { FleetOverview } from '../../fleet-intelligence.models';
 
 @Component({
   selector: 'app-fleet-overview',
-  imports: [DatePipe, RouterLink, IconComponent],
+  imports: [NgClass, FleetStatusPipe, FleetStatusClassPipe, DatePipe, RouterLink, IconComponent],
   templateUrl: './fleet-overview.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

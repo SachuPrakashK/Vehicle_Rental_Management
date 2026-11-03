@@ -33,7 +33,7 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
                     : error.status === 404
                       ? 'The requested record could not be found.'
                       : error.status === 409
-                        ? 'A record with these details already exists.'
+                        ? (typeof error.error?.message === 'string' ? error.error.message : 'The record has already changed. Please refresh and try again.')
                         : error.status === 413
                           ? 'The selected image exceeds the 5 MB limit.'
                           : error.status === 422

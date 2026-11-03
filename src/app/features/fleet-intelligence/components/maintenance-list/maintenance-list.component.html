@@ -35,9 +35,7 @@
             {{ record.estimatedCost == null ? '—' : (record.estimatedCost | currency: 'INR') }}
           </td>
           <td>
-            <span class="status" [class.warning]="record.status === 'DUE'">{{
-              record.status
-            }}</span>
+            <span class="fleet-status" [ngClass]="record.status | fleetStatusClass">{{ record.status | fleetStatus }}</span>
           </td>
         </tr>
       } @empty {

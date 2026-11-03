@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize, forkJoin, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import type { Vehicle } from '../../core/models/api.models';
 import { FeedbackService } from '../../core/services/feedback.service';
 import { PermissionService } from '../../core/services/permission.service';
@@ -142,7 +142,7 @@ export class FleetIntelligenceComponent {
     const requests = {
       capabilities: this.api.capabilities(),
       vehicles:
-        section === 'maintenance' || section === 'tracking' ? this.vehicleApi.list() : of([]),
+        section === 'maintenance' || section === 'tracking' ? this.vehicleApi.list().pipe(catchError(() => of([] as Vehicle[]))) : of([]),
       data:
         section === 'maintenance'
           ? this.api.maintenance()
@@ -249,8 +249,11 @@ export class FleetIntelligenceComponent {
 
   acknowledge(alert: FleetAlert): void {
     this.api.acknowledge(alert.id).subscribe({
-      next: () => this.load(),
-      error: () => this.feedback.toast('Unable to acknowledge the alert.', 'error'),
+      next: () => {
+        this.feedback.toast('Alert acknowledged successfully.');
+        this.load();
+      },
+      error: () => this.feedback.toast('Unable to acknowledge the alert. Please retry after refreshing.', 'error'),
     });
   }
 

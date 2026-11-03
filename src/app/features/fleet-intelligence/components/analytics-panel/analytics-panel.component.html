@@ -60,9 +60,7 @@
           <td>{{ item.nextDueDate ?? '—' }}</td>
           <td>{{ item.nextDueOdometer ?? '—' }}</td>
           <td>
-            <span class="status" [class.warning]="item.forecastStatus !== 'PLANNED'">{{
-              item.forecastStatus
-            }}</span
+            <span class="fleet-status" [ngClass]="item.forecastStatus | fleetStatusClass">{{ item.forecastStatus | fleetStatus }}</span
             ><small class="table-subtitle">Deterministic interval</small>
           </td>
         </tr>

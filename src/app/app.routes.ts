@@ -5,17 +5,18 @@ import { permissionGuard } from './core/guards/role.guard';
 export const routes: Routes = [
   {
     path: 'auth',
-    canActivate: [guestGuard],
     children: [
       {
         path: 'login',
         title: 'Login',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/pages/login/login.component').then((m) => m.LoginComponent),
       },
       {
         path: 'register',
         title: 'Register',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/pages/register/register.component').then(
             (m) => m.RegisterComponent,
@@ -24,6 +25,7 @@ export const routes: Routes = [
       {
         path: 'forgot-password',
         title: 'Forgot Password',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/pages/forgot-password/forgot-password.component').then(
             (m) => m.ForgotPasswordComponent,
