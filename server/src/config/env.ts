@@ -50,6 +50,34 @@ const schema = z.object({
   SMTP_FROM: optionalString,
   SEED_SUPER_ADMIN_EMAIL: optionalEmail,
   SEED_SUPER_ADMIN_PASSWORD: optionalString,
+  FLEET_MAINTENANCE_ENABLED: z
+    .string()
+    .default('true')
+    .transform((value) => value === 'true'),
+  FLEET_HEALTH_ENABLED: z
+    .string()
+    .default('true')
+    .transform((value) => value === 'true'),
+  FLEET_TRACKING_ENABLED: z
+    .string()
+    .default('true')
+    .transform((value) => value === 'true'),
+  FLEET_GEOFENCING_ENABLED: z
+    .string()
+    .default('true')
+    .transform((value) => value === 'true'),
+  FLEET_PREDICTIONS_ENABLED: z
+    .string()
+    .default('true')
+    .transform((value) => value === 'true'),
+  FLEET_SIMULATOR_ENABLED: z
+    .string()
+    .default('true')
+    .transform((value) => value === 'true'),
+  TRACCAR_BASE_URL: optionalString,
+  TRACCAR_USERNAME: optionalString,
+  TRACCAR_PASSWORD: optionalString,
+  TELEMETRY_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -71,4 +99,12 @@ if (!!env.SMTP_USER !== !!env.SMTP_PASSWORD) {
 }
 if (env.COOKIE_SAME_SITE === 'none' && !env.COOKIE_SECURE) {
   throw new Error('SameSite=None cookies must be Secure.');
+}
+if (
+  [env.TRACCAR_BASE_URL, env.TRACCAR_USERNAME, env.TRACCAR_PASSWORD].filter(Boolean).length > 0 &&
+  [env.TRACCAR_BASE_URL, env.TRACCAR_USERNAME, env.TRACCAR_PASSWORD].filter(Boolean).length < 3
+) {
+  throw new Error(
+    'TRACCAR_BASE_URL, TRACCAR_USERNAME, and TRACCAR_PASSWORD must be configured together.',
+  );
 }

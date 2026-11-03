@@ -1,0 +1,56 @@
+<div class="list-heading">
+  <div>
+    <h2>Maintenance records</h2>
+    <p>Schedule and record vehicle servicing with an auditable history.</p>
+  </div>
+  @if (canCreate()) {
+    <button class="button primary" type="button" (click)="addRequested.emit()">
+      <app-icon name="add"></app-icon>Add maintenance
+    </button>
+  }
+</div>
+<div class="card table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Vehicle</th>
+        <th>Type</th>
+        <th>Scheduled</th>
+        <th>Odometer</th>
+        <th>Estimated cost</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (record of records(); track record.id) {
+        <tr>
+          <td>
+            <strong>{{ record.registrationNumber }}</strong
+            ><small class="table-subtitle">{{ record.vehicleRef }}</small>
+          </td>
+          <td>{{ record.maintenanceType }}</td>
+          <td>{{ record.scheduledDate | date: 'mediumDate' }}</td>
+          <td>{{ record.odometerReading ?? '—' }}</td>
+          <td>
+            {{ record.estimatedCost == null ? '—' : (record.estimatedCost | currency: 'INR') }}
+          </td>
+          <td>
+            <span class="status" [class.warning]="record.status === 'DUE'">{{
+              record.status
+            }}</span>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <app-icon name="wrench"></app-icon>
+              <h3>No maintenance records</h3>
+              <p>Create a schedule when a vehicle needs planned service.</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

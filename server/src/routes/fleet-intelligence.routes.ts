@@ -1,0 +1,112 @@
+import { Router } from 'express';
+import * as controller from '../controllers/fleet-intelligence.controller.js';
+import { requireAuth, requirePermission } from '../middleware/auth.middleware.js';
+import { validateBody } from '../middleware/validate.middleware.js';
+import { asyncHandler } from '../utils/async-handler.js';
+import {
+  alertActionSchema,
+  completeMaintenanceSchema,
+  geofenceSchema,
+  inspectionSchema,
+  maintenanceSchema,
+  scheduleSchema,
+  simulatorSchema,
+} from '../validators/fleet-intelligence.validators.js';
+
+const router = Router();
+router.use(requireAuth);
+router.get(
+  '/capabilities',
+  requirePermission('fleet.overview.view'),
+  asyncHandler(controller.capabilities),
+);
+router.get(
+  '/overview',
+  requirePermission('fleet.overview.view'),
+  asyncHandler(controller.overview),
+);
+router.get(
+  '/maintenance',
+  requirePermission('fleet.maintenance.view'),
+  asyncHandler(controller.maintenance),
+);
+router.post(
+  '/maintenance',
+  requirePermission('fleet.maintenance.create'),
+  validateBody(maintenanceSchema),
+  asyncHandler(controller.createMaintenance),
+);
+router.post(
+  '/maintenance/:id/complete',
+  requirePermission('fleet.maintenance.complete'),
+  validateBody(completeMaintenanceSchema),
+  asyncHandler(controller.completeMaintenance),
+);
+router.get(
+  '/schedules',
+  requirePermission('fleet.maintenance.view'),
+  asyncHandler(controller.schedules),
+);
+router.post(
+  '/schedules',
+  requirePermission('fleet.maintenance.create'),
+  validateBody(scheduleSchema),
+  asyncHandler(controller.createSchedule),
+);
+router.get(
+  '/inspections',
+  requirePermission('fleet.health.view'),
+  asyncHandler(controller.inspections),
+);
+router.post(
+  '/inspections',
+  requirePermission('fleet.health.assess'),
+  validateBody(inspectionSchema),
+  asyncHandler(controller.createInspection),
+);
+router.get('/health', requirePermission('fleet.health.view'), asyncHandler(controller.health));
+router.get(
+  '/tracking',
+  requirePermission('fleet.tracking.view'),
+  asyncHandler(controller.tracking),
+);
+router.post(
+  '/tracking/simulate',
+  requirePermission('fleet.tracking.devices.manage'),
+  validateBody(simulatorSchema),
+  asyncHandler(controller.simulate),
+);
+router.get('/alerts', requirePermission('fleet.alerts.view'), asyncHandler(controller.alerts));
+router.patch(
+  '/alerts/:id/acknowledge',
+  requirePermission('fleet.alerts.acknowledge'),
+  asyncHandler(controller.acknowledge),
+);
+router.patch(
+  '/alerts/:id/resolve',
+  requirePermission('fleet.alerts.resolve'),
+  validateBody(alertActionSchema),
+  asyncHandler(controller.resolve),
+);
+router.get(
+  '/geofences',
+  requirePermission('fleet.geofences.view'),
+  asyncHandler(controller.geofences),
+);
+router.post(
+  '/geofences',
+  requirePermission('fleet.geofences.create'),
+  validateBody(geofenceSchema),
+  asyncHandler(controller.createGeofence),
+);
+router.get(
+  '/analytics',
+  requirePermission('fleet.analytics.view'),
+  asyncHandler(controller.analytics),
+);
+router.get(
+  '/forecasts',
+  requirePermission('fleet.predictions.view'),
+  asyncHandler(controller.forecasts),
+);
+export default router;

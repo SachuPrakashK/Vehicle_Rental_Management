@@ -3,13 +3,13 @@ import { inject, Injectable } from '@angular/core';
 import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { AdminUser } from '../models/api.models';
-import type { AuthApiResponse, UserRole } from '../models/auth.models';
+import type { AuthApiResponse } from '../models/auth.models';
 export interface SaveAdminUser {
   firstName: string;
   lastName: string;
   email: string;
   phone: string | null;
-  role: UserRole;
+  roleIds?: string[];
   isActive: boolean;
   password?: string;
 }

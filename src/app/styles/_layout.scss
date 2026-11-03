@@ -31,10 +31,26 @@
   padding: 0 21px;
 }
 .sidebar-section {
-  padding: 22px 26px 10px;
+  padding: 18px 26px 8px;
   font-size: 9px;
   letter-spacing: 1.5px;
   color: var(--muted);
+}
+.sidebar > nav {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.sidebar-group + .sidebar-group {
+  margin-top: 4px;
+}
+.sidebar-group + .sidebar-group::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: 8px 26px 0;
+  background: var(--border);
 }
 .sidebar-nav {
   display: grid;
@@ -81,7 +97,13 @@
   display: none;
 }
 .collapsed .sidebar-nav {
-  margin-top: 22px;
+  margin-top: 0;
+}
+.collapsed .sidebar-group + .sidebar-group {
+  margin-top: 8px;
+}
+.collapsed .sidebar-group + .sidebar-group::before {
+  margin: 6px 22px 8px;
 }
 .sidebar-footer {
   margin-top: auto;

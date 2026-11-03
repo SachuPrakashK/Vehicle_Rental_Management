@@ -23,6 +23,10 @@ export interface AuthSession {
   user: AuthUser;
   accessToken: string;
 }
+export interface AuthorizationSnapshot {
+  roles: RoleSummary[];
+  permissions: string[];
+}
 export interface AuthApiResponse<T> {
   success: boolean;
   message: string;

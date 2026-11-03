@@ -136,6 +136,82 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'fleet-intelligence',
+        canActivate: [permissionGuard],
+        data: { permission: 'fleet.overview.view' },
+        children: [
+          {
+            path: '',
+            title: 'Smart Fleet Intelligence',
+            data: { section: 'overview' },
+            loadComponent: () =>
+              import('./features/fleet-intelligence/fleet-intelligence.component').then(
+                (m) => m.FleetIntelligenceComponent,
+              ),
+          },
+          {
+            path: 'maintenance',
+            title: 'Fleet Maintenance',
+            data: { section: 'maintenance', permission: 'fleet.maintenance.view' },
+            canActivate: [permissionGuard],
+            loadComponent: () =>
+              import('./features/fleet-intelligence/fleet-intelligence.component').then(
+                (m) => m.FleetIntelligenceComponent,
+              ),
+          },
+          {
+            path: 'health',
+            title: 'Vehicle Health',
+            data: { section: 'health', permission: 'fleet.health.view' },
+            canActivate: [permissionGuard],
+            loadComponent: () =>
+              import('./features/fleet-intelligence/fleet-intelligence.component').then(
+                (m) => m.FleetIntelligenceComponent,
+              ),
+          },
+          {
+            path: 'tracking',
+            title: 'Fleet Tracking',
+            data: { section: 'tracking', permission: 'fleet.tracking.view' },
+            canActivate: [permissionGuard],
+            loadComponent: () =>
+              import('./features/fleet-intelligence/fleet-intelligence.component').then(
+                (m) => m.FleetIntelligenceComponent,
+              ),
+          },
+          {
+            path: 'alerts',
+            title: 'Fleet Alerts',
+            data: { section: 'alerts', permission: 'fleet.alerts.view' },
+            canActivate: [permissionGuard],
+            loadComponent: () =>
+              import('./features/fleet-intelligence/fleet-intelligence.component').then(
+                (m) => m.FleetIntelligenceComponent,
+              ),
+          },
+          {
+            path: 'geofences',
+            title: 'Fleet Geofences',
+            data: { section: 'geofences', permission: 'fleet.geofences.view' },
+            canActivate: [permissionGuard],
+            loadComponent: () =>
+              import('./features/fleet-intelligence/fleet-intelligence.component').then(
+                (m) => m.FleetIntelligenceComponent,
+              ),
+          },
+          {
+            path: 'analytics',
+            title: 'Fleet Analytics',
+            data: { section: 'analytics', permission: 'fleet.analytics.view' },
+            canActivate: [permissionGuard],
+            loadComponent: () =>
+              import('./features/fleet-intelligence/fleet-intelligence.component').then(
+                (m) => m.FleetIntelligenceComponent,
+              ),
+          },
+        ],
+      },
+      {
         path: 'profile',
         title: 'My Profile',
         canDeactivate: [unsavedGuard],

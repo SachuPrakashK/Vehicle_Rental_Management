@@ -1,6 +1,8 @@
-﻿<app-page-header title="Admin users" description="Manage accounts, roles, and access."
-  ><button class="button" (click)="edit()"><app-icon name="add" />Add user</button></app-page-header
->
+﻿<app-page-header title="Admin users" description="Manage accounts, roles, and access.">
+  @if (permissions.hasAll(['users.create', 'users.assign_role'])) {
+    <button class="button" (click)="edit()"><app-icon name="add" />Add user</button>
+  }
+</app-page-header>
 <section class="card">
   <div class="toolbar">
     <app-search
@@ -31,6 +33,7 @@
             <th>Email</th>
             <th>Phone</th>
             <th>Roles</th>
+            <th>Effective permissions</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -44,8 +47,11 @@
               <td>
                 @for (role of user.roles || []; track role.id) {
                   <span class="badge neutral">{{ role.name }}</span>
+                } @empty {
+                  <span class="table-subtitle">No active roles</span>
                 }
               </td>
+              <td>{{ user.permissionCount ?? 0 }}</td>
               <td>
                 <span [class]="user.isActive ? 'badge' : 'badge neutral'">{{
                   user.isActive ? 'Active' : 'Inactive'
@@ -54,7 +60,7 @@
               <td>
                 <app-action-menu
                   [label]="'Actions for ' + user.firstName"
-                  [items]="rowActions"
+                  [items]="userActions(user)"
                   [disabled]="!!deleting()"
                   (selected)="userAction($event, user)"
                 />
@@ -74,7 +80,7 @@
 <app-drawer
   [open]="open()"
   [title]="viewing() ? 'User details' : selected() ? 'Edit user' : 'Add user'"
-  [dirty]="!viewing() && form.dirty"
+  [dirty]="!viewing() && (form.dirty || rolesDirty())"
   [busy]="busy()"
   (closed)="open.set(false)"
 >
@@ -138,13 +144,32 @@
             placeholder="Enter phone number"
           /><app-field-error [control]="form.controls.phone" />
         </div>
-        <div class="field">
-          <label for="admin-role">Role <span class="required">*</span></label
-          ><select id="admin-role" formControlName="role">
-            <option value="STAFF">Staff</option>
-            <option value="ADMIN">Admin</option>
-            <option value="SUPER_ADMIN">Super Admin</option>
-          </select>
+        <div class="field span-2">
+          <span class="field-label">Assigned roles <span class="required">*</span></span>
+          @if (!permissions.has('users.assign_role')) {
+            <div class="notice info">Your role cannot change user role assignments.</div>
+          } @else if (selected()?.role === 'SUPER_ADMIN') {
+            <div class="notice info">Super Admin role assignments are protected.</div>
+          } @else {
+            <div class="role-selection-grid">
+              @for (role of availableRoles(); track role.id) {
+                <label class="checkbox-label role-selection-option">
+                  <input
+                    type="checkbox"
+                    [checked]="assignedRoleIds().has(role.id)"
+                    (change)="toggleRole(role.id, $any($event.target).checked)"
+                  />
+                  <span
+                    ><strong>{{ role.name }}</strong
+                    ><small>{{ role.description || role.code }}</small></span
+                  >
+                </label>
+              }
+            </div>
+            @if (!assignedRoleIds().size) {
+              <small class="field-error">Select at least one role.</small>
+            }
+          }
         </div>
         @if (!selected()) {
           <div class="field span-2">
@@ -163,7 +188,11 @@
         >
       </div>
       <div class="form-actions">
-        <button type="submit" class="button" [disabled]="form.invalid || busy()">
+        <button
+          type="submit"
+          class="button"
+          [disabled]="form.invalid || !assignedRoleIds().size || busy()"
+        >
           @if (busy()) {
             <span class="spinner"></span>
           }
@@ -176,6 +205,7 @@
 <app-drawer
   [open]="roleDrawerOpen()"
   title="Assign roles"
+  [dirty]="rolesDirty()"
   [busy]="busy()"
   (closed)="roleDrawerOpen.set(false)"
 >
@@ -203,7 +233,7 @@
       <button
         class="button"
         type="button"
-        [disabled]="!assignedRoleIds().size || busy()"
+        [disabled]="!assignedRoleIds().size || !rolesDirty() || busy()"
         (click)="saveRoles()"
       >
         @if (busy()) {

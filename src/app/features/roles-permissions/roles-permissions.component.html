@@ -53,7 +53,6 @@
                     <button
                       class="button secondary small"
                       type="button"
-                      [disabled]="role.code === 'SUPER_ADMIN'"
                       (click)="editPermissions(role)"
                     >
                       Permissions
@@ -140,50 +139,175 @@
 </app-drawer>
 
 <app-drawer
+  #permissionDrawer
   [open]="matrixOpen()"
   [title]="'Permissions · ' + (selected()?.name || '')"
-  [dirty]="false"
+  size="wide"
+  [dirty]="permissionsDirty()"
   [busy]="busy()"
-  (closed)="matrixOpen.set(false)"
+  (closed)="closePermissions()"
 >
-  <p class="form-note">{{ selectedPermissionIds().size }} permissions selected</p>
-  <div class="permission-groups">
-    @for (group of permissionGroups(); track group.module) {
-      <section class="permission-group card">
-        <div class="permission-group-heading">
-          <h3>{{ group.module }}</h3>
-          <label class="checkbox-label"
-            ><input
-              type="checkbox"
-              [checked]="group.items.every((item) => checked(item.id))"
-              (change)="toggleModule(group.items, $any($event.target).checked)"
-            />
-            Select all</label
-          >
-        </div>
-        <div class="permission-options">
-          @for (permission of group.items; track permission.id) {
-            <label class="checkbox-label"
-              ><input
-                type="checkbox"
-                [checked]="checked(permission.id)"
-                (change)="toggle(permission.id, $any($event.target).checked)"
-              /><span
-                ><strong>{{ permission.action }}</strong
-                ><small>{{ permission.description }}</small></span
-              ></label
-            >
-          }
-        </div>
-      </section>
+  <div drawer-footer class="drawer-footer permission-actions">
+    <button
+      class="button secondary"
+      type="button"
+      [disabled]="busy()"
+      (click)="permissionDrawer.close()"
+    >
+      Cancel
+    </button>
+    @if (!permissionsReadOnly()) {
+      <button
+        class="button secondary"
+        type="button"
+        [disabled]="!permissionsDirty() || busy()"
+        (click)="resetPermissionChanges()"
+      >
+        Reset changes
+      </button>
+      <button
+        class="button"
+        type="button"
+        [disabled]="!permissionsDirty() || busy()"
+        (click)="savePermissions()"
+      >
+        @if (busy()) {
+          <span class="spinner"></span>
+        }
+        Save changes
+      </button>
     }
   </div>
-  <div class="form-actions">
-    <button class="button" type="button" [disabled]="busy()" (click)="savePermissions()">
-      @if (busy()) {
-        <span class="spinner"></span>
-      }
-      Save permissions
-    </button>
+
+  <section class="permission-summary" aria-labelledby="permission-role-name">
+    <div>
+      <span class="eyebrow">SELECTED ROLE</span>
+      <h3 id="permission-role-name">{{ selected()?.name }}</h3>
+      <p>{{ selected()?.description || 'Configure access for this role.' }}</p>
+    </div>
+    <div class="permission-count" aria-live="polite">
+      <strong>{{ selectedPermissionIds().size }}</strong>
+      <span>of {{ permissions().length }} selected</span>
+    </div>
+  </section>
+
+  @if (permissionsReadOnly()) {
+    <div class="notice info" role="status">
+      <app-icon name="shield" />
+      <span>{{ permissionsReadOnlyMessage() }}</span>
+    </div>
+  }
+
+  <div class="permission-toolbar">
+    <app-search
+      [value]="permissionSearch()"
+      label="Search permissions"
+      (valueChange)="permissionSearch.set($event)"
+    />
+    <select
+      class="select-control"
+      aria-label="Filter permissions"
+      [value]="permissionFilter()"
+      (change)="permissionFilter.set($any($event.target).value)"
+    >
+      <option value="all">All permissions</option>
+      <option value="selected">Selected</option>
+      <option value="unselected">Unselected</option>
+    </select>
+    @if (permissionSearch() || permissionFilter() !== 'all') {
+      <button
+        class="button secondary small permission-utility-button"
+        type="button"
+        (click)="clearPermissionSearch()"
+      >
+        Clear
+      </button>
+    }
+  </div>
+
+  <div class="permission-bulk-actions">
+    <label class="checkbox-label permission-select-all">
+      <input
+        type="checkbox"
+        [checked]="allSelected()"
+        [indeterminate]="someSelected()"
+        [attr.aria-checked]="someSelected() ? 'mixed' : allSelected()"
+        [disabled]="permissionsReadOnly()"
+        (change)="toggleAll($any($event.target).checked)"
+      />
+      <span><strong>Select all permissions</strong><small>Applies to every module</small></span>
+    </label>
+    <div class="permission-expand-actions" role="group" aria-label="Permission group display">
+      <button
+        class="button secondary small permission-utility-button"
+        type="button"
+        (click)="expandAll()"
+      >
+        Expand All
+      </button>
+      <button
+        class="button secondary small permission-utility-button"
+        type="button"
+        (click)="collapseAll()"
+      >
+        Collapse All
+      </button>
+    </div>
+  </div>
+
+  <div class="permission-groups">
+    @for (group of visiblePermissionGroups(); track group.module) {
+      <section class="permission-group card">
+        <div class="permission-group-heading">
+          <button
+            class="permission-group-toggle"
+            type="button"
+            [attr.aria-expanded]="isExpanded(group.module)"
+            [attr.aria-controls]="'permission-group-' + $index"
+            (click)="toggleExpanded(group.module)"
+          >
+            <span
+              ><strong>{{ group.module }}</strong
+              ><small>{{ moduleSelectedCount(group) }} of {{ group.total }} selected</small></span
+            >
+            <app-icon name="chevron" [class.expanded]="isExpanded(group.module)" />
+          </button>
+          <label class="checkbox-label permission-module-all">
+            <input
+              type="checkbox"
+              [checked]="moduleAllSelected(group)"
+              [indeterminate]="modulePartiallySelected(group)"
+              [attr.aria-checked]="
+                modulePartiallySelected(group) ? 'mixed' : moduleAllSelected(group)
+              "
+              [disabled]="permissionsReadOnly()"
+              (change)="toggleModule(group.allItems, $any($event.target).checked)"
+            />
+            Select all
+          </label>
+        </div>
+        @if (isExpanded(group.module)) {
+          <div class="permission-options" [id]="'permission-group-' + $index">
+            @for (permission of group.items; track permission.id) {
+              <label class="checkbox-label permission-option">
+                <input
+                  type="checkbox"
+                  [checked]="checked(permission.id)"
+                  [disabled]="permissionsReadOnly()"
+                  (change)="toggle(permission.id, $any($event.target).checked)"
+                />
+                <span
+                  ><strong>{{ permission.action }}</strong
+                  ><small>{{ permission.description }}</small
+                  ><code>{{ permission.code }}</code>
+                </span>
+              </label>
+            }
+          </div>
+        }
+      </section>
+    } @empty {
+      <app-empty-state description="No permissions match the current search and filter." />
+    }
   </div>
 </app-drawer>

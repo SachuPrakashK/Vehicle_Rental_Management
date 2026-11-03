@@ -15,6 +15,7 @@ import {
 import { environment } from '../../../environments/environment';
 import type {
   AuthApiResponse,
+  AuthorizationSnapshot,
   AuthSession,
   AuthUser,
   LoginRequest,
@@ -85,6 +86,18 @@ export class AuthService {
       .pipe(
         map((r) => r.data),
         tap((user) => this.store.updateUser(user)),
+      );
+  }
+  refreshAuthorization() {
+    const context = new HttpContext().set(SILENT_REQUEST, true);
+    return this.http
+      .get<AuthApiResponse<AuthorizationSnapshot>>(
+        environment.authApiBaseUrl + '/auth/me/permissions',
+        { withCredentials: true, context },
+      )
+      .pipe(
+        map((response) => response.data),
+        tap((authorization) => this.store.updateAuthorization(authorization)),
       );
   }
   restoreSession(): Promise<void> {

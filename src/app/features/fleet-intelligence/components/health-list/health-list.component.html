@@ -1,0 +1,27 @@
+<div class="list-heading">
+  <div>
+    <h2>Vehicle health</h2>
+    <p>Explainable rule-based scores from maintenance and inspection records.</p>
+  </div>
+</div>
+<div class="fleet-health-grid">
+  @for (item of health(); track item.vehicleRef) {
+    <article class="card card-body fleet-health">
+      <div class="fleet-health-score">{{ item.healthScore }}</div>
+      <div>
+        <h3>{{ item.registrationNumber }}</h3>
+        <span class="status">{{ item.status }}</span>
+        <p>
+          {{ item.factors.overdueMaintenance }} overdue maintenance item(s),
+          {{ item.factors.openInspectionDefects }} open inspection defect(s)
+        </p>
+        <small>Rule set {{ item.version }} · Data completeness {{ item.dataCompleteness }}%</small>
+      </div>
+    </article>
+  } @empty {
+    <div class="card empty-state">
+      <h3>No health assessments</h3>
+      <p>Add maintenance or inspection history to calculate an explainable health score.</p>
+    </div>
+  }
+</div>

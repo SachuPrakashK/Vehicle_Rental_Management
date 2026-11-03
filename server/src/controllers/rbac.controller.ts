@@ -3,6 +3,7 @@ import { pool } from '../config/database.js';
 import * as rbac from '../repositories/rbac.repository.js';
 import { AppError } from '../utils/app-error.js';
 import { success } from '../utils/api-response.js';
+import * as roleAssignments from '../services/role-assignment.service.js';
 
 const roleById = async (id: string) => (await rbac.listRoles()).find((role) => role.id === id);
 
@@ -142,20 +143,16 @@ export async function userRoles(request: Request, response: Response) {
 
 export async function assignUserRoles(request: Request, response: Response) {
   const userId = String(request.params['id']);
-  if (userId === request.user!.id) throw new AppError(403, 'You cannot change your own roles.');
-  if (!(await pool.query('SELECT 1 FROM users WHERE id=$1', [userId])).rowCount)
-    throw new AppError(404, 'User not found.');
-  const roles = await rbac.listRoles();
-  const selected = roles.filter((role) => request.body.roleIds.includes(role.id));
-  if (selected.length !== request.body.roleIds.length || selected.some((role) => !role.isActive))
-    throw new AppError(400, 'One or more roles are invalid or inactive.');
-  if (selected.some((role) => role.code === 'SUPER_ADMIN'))
-    throw new AppError(403, 'Super Admin cannot be assigned through ordinary role assignment.');
-  const before = await rbac.userRoles(userId);
   const client = await pool.connect();
+  let result;
   try {
     await client.query('BEGIN');
-    await rbac.replaceUserRoles(client, userId, request.body.roleIds, request.user!.id);
+    result = await roleAssignments.replaceUserRoles(
+      client,
+      userId,
+      request.body.roleIds,
+      request.user!.id,
+    );
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');
@@ -163,15 +160,7 @@ export async function assignUserRoles(request: Request, response: Response) {
   } finally {
     client.release();
   }
-  const after = await rbac.userRoles(userId);
-  await rbac.audit({
-    actorId: request.user!.id,
-    targetUserId: userId,
-    action: 'USER_ROLES_UPDATED',
-    before,
-    after,
-  });
-  success(response, 200, 'User roles updated successfully.', after);
+  success(response, 200, 'User roles updated successfully.', result);
 }
 
 export async function audits(_request: Request, response: Response) {

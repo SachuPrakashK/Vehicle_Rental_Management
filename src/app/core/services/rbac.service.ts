@@ -56,7 +56,10 @@ export class RbacService {
   }
   assignUserRoles(userId: string, roleIds: string[]) {
     return this.http
-      .put<AuthApiResponse<RoleSummary[]>>(this.url + '/users/' + userId + '/roles', { roleIds })
+      .put<AuthApiResponse<{ roles: RoleSummary[]; permissions: string[] }>>(
+        this.url + '/users/' + userId + '/roles',
+        { roleIds },
+      )
       .pipe(map((response) => response.data));
   }
 }

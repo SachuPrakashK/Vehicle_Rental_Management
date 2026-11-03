@@ -50,6 +50,18 @@
     </section>
   </div>
   <app-recent-bookings [bookings]="bookings()" [currency]="currency" />
+
+  @if (permissions.has('fleet.overview.view')) {
+    <app-smart-fleet-summary
+      [overview]="fleetOverview()"
+      [loading]="fleetBusy()"
+      [error]="fleetError()"
+      [canViewMaintenance]="permissions.has('fleet.maintenance.view')"
+      [canViewAlerts]="permissions.has('fleet.alerts.view')"
+      [canViewHealth]="permissions.has('fleet.health.view')"
+    />
+  }
+
   <p class="form-note">
     Billed amounts are not confirmed payments. Availability, active/completed status, and payment
     tracking are not included in these booking records.

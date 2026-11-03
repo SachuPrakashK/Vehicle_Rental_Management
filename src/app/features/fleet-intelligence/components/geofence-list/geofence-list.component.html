@@ -1,0 +1,48 @@
+<div class="list-heading">
+  <div>
+    <h2>Geofences</h2>
+    <p>Local circular boundaries evaluated when positions are received.</p>
+  </div>
+  @if (canCreate()) {
+    <button class="button primary" type="button" (click)="addRequested.emit()">
+      <app-icon name="add"></app-icon>Add geofence
+    </button>
+  }
+</div>
+<div class="card table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Centre</th>
+        <th>Radius</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (geofence of geofences(); track geofence.id) {
+        <tr>
+          <td>
+            <strong>{{ geofence.name }}</strong
+            ><small class="table-subtitle">{{ geofence.description || 'No description' }}</small>
+          </td>
+          <td>{{ geofence.centerLatitude }}, {{ geofence.centerLongitude }}</td>
+          <td>{{ geofence.radiusMeters }} m</td>
+          <td>
+            <span class="status">{{ geofence.status }}</span>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4">
+            <div class="empty-state">
+              <app-icon name="location"></app-icon>
+              <h3>No geofences</h3>
+              <p>Create a boundary to generate deduplicated exit alerts.</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

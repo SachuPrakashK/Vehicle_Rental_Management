@@ -12,6 +12,9 @@ import { BookingOverviewComponent } from './components/booking-overview/booking-
 import { DashboardStatisticsComponent } from './components/dashboard-statistics/dashboard-statistics.component';
 import { RecentBookingsComponent } from './components/recent-bookings/recent-bookings.component';
 import { PermissionService } from '../../core/services/permission.service';
+import { FleetIntelligenceService } from '../fleet-intelligence/fleet-intelligence.service';
+import type { FleetOverview } from '../fleet-intelligence/fleet-intelligence.models';
+import { SmartFleetSummaryComponent } from './components/smart-fleet-summary/smart-fleet-summary.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,6 +24,7 @@ import { PermissionService } from '../../core/services/permission.service';
     BookingOverviewComponent,
     DashboardStatisticsComponent,
     RecentBookingsComponent,
+    SmartFleetSummaryComponent,
   ],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,16 +34,21 @@ export class DashboardComponent {
   private readonly service = inject(DashboardService);
   private readonly bookingService = inject(BookingService);
   private readonly vehicleService = inject(VehicleService);
+  private readonly fleetService = inject(FleetIntelligenceService);
   private readonly destroyRef = inject(DestroyRef);
   readonly data = signal<DashboardData | null>(null);
   readonly bookings = signal<Booking[]>([]);
   readonly vehicleCount = signal(0);
   readonly busy = signal(false);
   readonly error = signal('');
+  readonly fleetOverview = signal<FleetOverview | null>(null);
+  readonly fleetBusy = signal(false);
+  readonly fleetError = signal('');
   readonly currency = environment.currency;
 
   constructor() {
     void this.load();
+    if (this.permissions.has('fleet.overview.view')) void this.loadFleetOverview();
   }
 
   async load(): Promise<void> {
@@ -61,6 +70,23 @@ export class DashboardComponent {
       this.error.set(error instanceof Error ? error.message : 'Unable to load dashboard.');
     } finally {
       this.busy.set(false);
+    }
+  }
+
+  async loadFleetOverview(): Promise<void> {
+    if (this.fleetBusy() || !this.permissions.has('fleet.overview.view')) return;
+    this.fleetBusy.set(true);
+    this.fleetError.set('');
+    try {
+      this.fleetOverview.set(
+        await firstValueFrom(
+          this.fleetService.overview().pipe(takeUntilDestroyed(this.destroyRef)),
+        ),
+      );
+    } catch {
+      this.fleetError.set('Fleet health information is temporarily unavailable.');
+    } finally {
+      this.fleetBusy.set(false);
     }
   }
 }

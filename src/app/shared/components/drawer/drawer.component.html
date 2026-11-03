@@ -1,14 +1,15 @@
 <dialog
   #dialog
   class="drawer"
-  aria-labelledby="drawer-title"
+  [class.wide]="size() === 'wide'"
+  [attr.aria-labelledby]="titleId"
   (cancel)="$event.preventDefault(); close()"
   (click)="backdrop($event)"
 >
   <header class="drawer-header">
     <div>
       <span class="eyebrow">FLEETLINE</span>
-      <h2 id="drawer-title">{{ title() }}</h2>
+      <h2 [id]="titleId">{{ title() }}</h2>
     </div>
     <button
       type="button"

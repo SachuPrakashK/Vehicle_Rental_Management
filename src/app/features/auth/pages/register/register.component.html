@@ -2,28 +2,26 @@
   title="Create your account"
   description="Start building a more organized rental business."
 >
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <div class="form-grid">
-      <div class="field">
-        <label for="first-name">First name <span class="required">*</span></label>
-        <input
-          id="first-name"
-          formControlName="firstName"
-          autocomplete="given-name"
-          placeholder="Enter first name"
-        />
-        <app-field-error [control]="form.controls.firstName" />
-      </div>
-      <div class="field">
-        <label for="last-name">Last name <span class="required">*</span></label>
-        <input
-          id="last-name"
-          formControlName="lastName"
-          autocomplete="family-name"
-          placeholder="Enter last name"
-        />
-        <app-field-error [control]="form.controls.lastName" />
-      </div>
+  <form class="auth-register-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field">
+      <label for="first-name">First name <span class="required">*</span></label>
+      <input
+        id="first-name"
+        formControlName="firstName"
+        autocomplete="given-name"
+        placeholder="Enter first name"
+      />
+      <app-field-error [control]="form.controls.firstName" />
+    </div>
+    <div class="field">
+      <label for="last-name">Last name <span class="required">*</span></label>
+      <input
+        id="last-name"
+        formControlName="lastName"
+        autocomplete="family-name"
+        placeholder="Enter last name"
+      />
+      <app-field-error [control]="form.controls.lastName" />
     </div>
     <div class="field">
       <label for="auth-email">Email address <span class="required">*</span></label>
@@ -66,17 +64,17 @@
       form.hasError('passwordMismatch') &&
       (form.controls.confirmPassword.touched || form.controls.confirmPassword.dirty)
     ) {
-      <small class="field-error">Passwords must match.</small>
+      <small class="field-error span-2">Passwords must match.</small>
     }
-    <p class="form-note">
+    <p class="form-note span-2">
       Use 8+ characters with uppercase, lowercase, number, and special character.
     </p>
     @if (error()) {
-      <div class="field-error" role="alert">{{ error() }}</div>
+      <div class="field-error span-2" role="alert">{{ error() }}</div>
     }
     <button
       type="submit"
-      class="button full"
+      class="button full span-2"
       [disabled]="form.invalid || busy()"
       aria-label="Create account"
     >
