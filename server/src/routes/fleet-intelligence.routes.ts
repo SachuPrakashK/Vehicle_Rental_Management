@@ -9,6 +9,7 @@ import {
   geofenceSchema,
   inspectionSchema,
   maintenanceSchema,
+  updateMaintenanceSchema,
   scheduleSchema,
   simulatorSchema,
 } from '../validators/fleet-intelligence.validators.js';
@@ -30,11 +31,27 @@ router.get(
   requirePermission('fleet.maintenance.view'),
   asyncHandler(controller.maintenance),
 );
+router.get(
+  '/maintenance/:id',
+  requirePermission('fleet.maintenance.view'),
+  asyncHandler(controller.maintenanceById),
+);
 router.post(
   '/maintenance',
   requirePermission('fleet.maintenance.create'),
   validateBody(maintenanceSchema),
   asyncHandler(controller.createMaintenance),
+);
+router.put(
+  '/maintenance/:id',
+  requirePermission('fleet.maintenance.edit'),
+  validateBody(updateMaintenanceSchema),
+  asyncHandler(controller.updateMaintenance),
+);
+router.delete(
+  '/maintenance/:id',
+  requirePermission('fleet.maintenance.delete'),
+  asyncHandler(controller.deleteMaintenance),
 );
 router.post(
   '/maintenance/:id/complete',
@@ -93,11 +110,27 @@ router.get(
   requirePermission('fleet.geofences.view'),
   asyncHandler(controller.geofences),
 );
+router.get(
+  '/geofences/:id',
+  requirePermission('fleet.geofences.view'),
+  asyncHandler(controller.geofenceById),
+);
 router.post(
   '/geofences',
   requirePermission('fleet.geofences.create'),
   validateBody(geofenceSchema),
   asyncHandler(controller.createGeofence),
+);
+router.put(
+  '/geofences/:id',
+  requirePermission('fleet.geofences.edit'),
+  validateBody(geofenceSchema),
+  asyncHandler(controller.updateGeofence),
+);
+router.delete(
+  '/geofences/:id',
+  requirePermission('fleet.geofences.delete'),
+  asyncHandler(controller.deleteGeofence),
 );
 router.get(
   '/analytics',

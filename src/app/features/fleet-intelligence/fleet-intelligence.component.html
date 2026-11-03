@@ -32,7 +32,10 @@
       <app-maintenance-list
         [records]="maintenance()"
         [canCreate]="permissions.has('fleet.maintenance.create')"
-        (addRequested)="maintenanceOpen.set(true)"
+        [canEdit]="permissions.has('fleet.maintenance.edit')"
+        [canDelete]="permissions.has('fleet.maintenance.delete')"
+        (addRequested)="openMaintenanceCreate()"
+        (actionRequested)="handleMaintenanceAction($event)"
       ></app-maintenance-list>
     }
     @case ('health') {
@@ -50,14 +53,17 @@
       <app-geofence-list
         [geofences]="geofences()"
         [canCreate]="permissions.has('fleet.geofences.create')"
-        (addRequested)="geofenceOpen.set(true)"
+        [canEdit]="permissions.has('fleet.geofences.edit')"
+        [canDelete]="permissions.has('fleet.geofences.delete')"
+        (addRequested)="openGeofenceCreate()"
+        (actionRequested)="handleGeofenceAction($event)"
       ></app-geofence-list>
     }
     @case ('alerts') {
       <app-alert-list
         [alerts]="alerts()"
         [canAcknowledge]="permissions.has('fleet.alerts.acknowledge')"
-        (acknowledgeRequested)="acknowledge($event)"
+        (acknowledgeRequested)="requestAcknowledge($event)"
       ></app-alert-list>
     }
     @case ('analytics') {
@@ -74,6 +80,7 @@
     [form]="maintenanceForm"
     [vehicles]="vehicles()"
     [saving]="saving()"
+    [editingRecord]="editingMaintenance()"
     (saveRequested)="saveMaintenance()"
     (closeRequested)="closePanels()"
   ></app-maintenance-dialog>
@@ -82,10 +89,233 @@
   <app-geofence-dialog
     [form]="geofenceForm"
     [saving]="saving()"
+    [editing]="!!editingGeofence()"
     (saveRequested)="saveGeofence()"
     (closeRequested)="closePanels()"
   ></app-geofence-dialog>
 }
+
+<app-modal
+  [open]="!!geofenceDetails()"
+  title="Geofence Details"
+  (closed)="geofenceDetails.set(null)"
+>
+  @if (geofenceDetails(); as geofence) {
+    <div class="fleet-details">
+      <app-fleet-map [positions]="[]" [geofence]="geofence" />
+      <dl class="details-grid">
+        <div>
+          <dt>Name</dt>
+          <dd>{{ geofence.name }}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>
+            <span class="fleet-status" [ngClass]="geofence.status | fleetStatusClass">{{
+              geofence.status | fleetStatus
+            }}</span>
+          </dd>
+        </div>
+        <div class="full">
+          <dt>Description</dt>
+          <dd>{{ geofence.description || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Centre latitude</dt>
+          <dd>{{ geofence.centerLatitude }}</dd>
+        </div>
+        <div>
+          <dt>Centre longitude</dt>
+          <dd>{{ geofence.centerLongitude }}</dd>
+        </div>
+        <div>
+          <dt>Radius</dt>
+          <dd>{{ geofence.radiusMeters }} m</dd>
+        </div>
+        <div>
+          <dt>Assigned vehicles</dt>
+          <dd>Not configured</dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ geofence.createdAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{{ geofence.updatedAt | date: 'medium' }}</dd>
+        </div>
+      </dl>
+    </div>
+  }
+  <div modal-footer class="modal-footer">
+    <button class="button secondary" type="button" (click)="geofenceDetails.set(null)">
+      Close
+    </button>
+  </div>
+</app-modal>
+
+<app-modal
+  [open]="!!maintenanceDetails()"
+  title="Maintenance Details"
+  (closed)="maintenanceDetails.set(null)"
+>
+  @if (maintenanceDetails(); as record) {
+    <dl class="details-grid modal-details">
+      <div>
+        <dt>Vehicle</dt>
+        <dd>
+          <span class="vehicle-registration">{{ record.registrationNumber }}</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Status</dt>
+        <dd>
+          <span class="fleet-status" [ngClass]="record.status | fleetStatusClass">{{
+            record.status | fleetStatus
+          }}</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Maintenance type</dt>
+        <dd>{{ record.maintenanceType }}</dd>
+      </div>
+      <div>
+        <dt>Scheduled date</dt>
+        <dd>{{ record.scheduledDate | fleetDate }}</dd>
+      </div>
+      <div>
+        <dt>Completion date</dt>
+        <dd>{{ record.completedDate | fleetDate }}</dd>
+      </div>
+      <div>
+        <dt>Odometer</dt>
+        <dd>{{ record.odometerReading == null ? '—' : record.odometerReading + ' km' }}</dd>
+      </div>
+      <div>
+        <dt>Service provider</dt>
+        <dd>{{ record.serviceProvider || '—' }}</dd>
+      </div>
+      <div>
+        <dt>Estimated cost</dt>
+        <dd>{{ record.estimatedCost == null ? '—' : (record.estimatedCost | currency: 'INR') }}</dd>
+      </div>
+      <div>
+        <dt>Actual cost</dt>
+        <dd>{{ record.actualCost == null ? '—' : (record.actualCost | currency: 'INR') }}</dd>
+      </div>
+      <div class="full">
+        <dt>Description</dt>
+        <dd>{{ record.description }}</dd>
+      </div>
+      <div class="full">
+        <dt>Notes</dt>
+        <dd>{{ record.notes || '—' }}</dd>
+      </div>
+      <div>
+        <dt>Created</dt>
+        <dd>{{ record.createdAt | date: 'medium' }}</dd>
+      </div>
+      <div>
+        <dt>Updated</dt>
+        <dd>{{ record.updatedAt | date: 'medium' }}</dd>
+      </div>
+    </dl>
+  }
+  <div modal-footer class="modal-footer">
+    <button class="button secondary" type="button" (click)="maintenanceDetails.set(null)">
+      Close
+    </button>
+  </div>
+</app-modal>
+
+<app-modal
+  [open]="!!confirmation()"
+  [title]="
+    confirmation()?.kind === 'acknowledgeAlert' ? 'Acknowledge Fleet Alert' : 'Confirm Delete'
+  "
+  [compact]="true"
+  (closed)="!saving() && confirmation.set(null)"
+>
+  @if (confirmation(); as item) {
+    <div class="confirmation-content">
+      @switch (item.kind) {
+        @case ('acknowledgeAlert') {
+          <p>
+            Are you sure you want to acknowledge this fleet alert? The alert will be marked as
+            acknowledged.
+          </p>
+          <dl class="details-grid">
+            <div>
+              <dt>Vehicle</dt>
+              <dd>
+                <span class="vehicle-registration">{{
+                  item.alert.registrationNumber || 'Fleet'
+                }}</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Type</dt>
+              <dd>{{ item.alert.alertType | fleetStatus }}</dd>
+            </div>
+            <div>
+              <dt>Severity</dt>
+              <dd>{{ item.alert.severity | fleetStatus }}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{{ item.alert.status | fleetStatus }}</dd>
+            </div>
+            <div class="full">
+              <dt>Description</dt>
+              <dd>{{ item.alert.message }}</dd>
+            </div>
+          </dl>
+        }
+        @case ('deleteGeofence') {
+          <p>
+            Are you sure you want to delete <strong>{{ item.geofence.name }}</strong
+            >? Historical alerts will be retained.
+          </p>
+        }
+        @case ('deleteMaintenance') {
+          <p>
+            Are you sure you want to delete <strong>{{ item.record.maintenanceType }}</strong> for
+            <span class="vehicle-registration">{{ item.record.registrationNumber }}</span
+            >?
+          </p>
+        }
+      }
+    </div>
+  }
+  <div modal-footer class="modal-footer">
+    <button
+      class="button secondary"
+      type="button"
+      [disabled]="saving()"
+      (click)="confirmation.set(null)"
+    >
+      Cancel
+    </button>
+    <button
+      class="button"
+      [class.danger]="confirmation()?.kind !== 'acknowledgeAlert'"
+      type="button"
+      [disabled]="saving()"
+      (click)="confirmFleetAction()"
+    >
+      @if (saving()) {
+        <span class="spinner"></span>
+      }
+      {{
+        saving()
+          ? 'Processing...'
+          : confirmation()?.kind === 'acknowledgeAlert'
+            ? 'Acknowledge Alert'
+            : 'Delete'
+      }}
+    </button>
+  </div>
+</app-modal>
 @if (simulationOpen()) {
   <app-simulation-dialog
     [form]="simulationForm"

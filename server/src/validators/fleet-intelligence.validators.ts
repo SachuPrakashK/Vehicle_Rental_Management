@@ -19,6 +19,12 @@ export const maintenanceSchema = z.object({
   notes: z.string().trim().max(1000).nullable().optional(),
 });
 
+export const updateMaintenanceSchema = maintenanceSchema.omit({
+  vehicleRef: true,
+  vehicleType: true,
+  registrationNumber: true,
+});
+
 export const completeMaintenanceSchema = z.object({
   completedDate: z.iso.datetime(),
   odometerReading: z.number().int().nonnegative(),

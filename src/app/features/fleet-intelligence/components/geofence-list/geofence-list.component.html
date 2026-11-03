@@ -17,6 +17,7 @@
         <th>Centre</th>
         <th>Radius</th>
         <th>Status</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -29,12 +30,21 @@
           <td>{{ geofence.centerLatitude }}, {{ geofence.centerLongitude }}</td>
           <td>{{ geofence.radiusMeters }} m</td>
           <td>
-            <span class="fleet-status" [ngClass]="geofence.status | fleetStatusClass">{{ geofence.status | fleetStatus }}</span>
+            <span class="fleet-status" [ngClass]="geofence.status | fleetStatusClass">{{
+              geofence.status | fleetStatus
+            }}</span>
+          </td>
+          <td>
+            <app-action-menu
+              [items]="actions()"
+              [label]="'Actions for ' + geofence.name"
+              (selected)="actionRequested.emit({ action: $event, geofence: geofence })"
+            />
           </td>
         </tr>
       } @empty {
         <tr>
-          <td colspan="4">
+          <td colspan="5">
             <div class="empty-state">
               <app-icon name="location"></app-icon>
               <h3>No geofences</h3>

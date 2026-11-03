@@ -8,8 +8,14 @@
   >
     <div class="modal-header">
       <div>
-        <h2 id="geofence-title">Add Geofence</h2>
-        <p>Create a circular operational boundary</p>
+        <h2 id="geofence-title">{{ editing() ? 'Edit Geofence' : 'Add Geofence' }}</h2>
+        <p>
+          {{
+            editing()
+              ? 'Update this circular operational boundary'
+              : 'Create a circular operational boundary'
+          }}
+        </p>
       </div>
       <button class="icon-button" type="button" aria-label="Close" (click)="closeRequested.emit()">
         <app-icon name="close"></app-icon>
@@ -30,13 +36,19 @@
         ><input type="number" step="0.000001" formControlName="centerLongitude" /></label
       ><label class="field full"
         ><span>Radius in metres <b>*</b></span
-        ><input type="number" formControlName="radiusMeters"
-      /></label>
+        ><input type="number" formControlName="radiusMeters" /></label
+      ><label class="field full"
+        ><span>Status <b>*</b></span
+        ><select formControlName="status">
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select></label
+      >
       <div class="modal-actions full">
         <button class="button secondary" type="button" (click)="closeRequested.emit()">
           Cancel</button
         ><button class="button primary" type="submit" [disabled]="form().invalid || saving()">
-          {{ saving() ? 'Saving...' : 'Save' }}
+          {{ saving() ? 'Saving...' : editing() ? 'Update Geofence' : 'Add Geofence' }}
         </button>
       </div>
     </form>

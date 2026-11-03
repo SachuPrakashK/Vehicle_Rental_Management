@@ -8,8 +8,16 @@
   >
     <div class="drawer-header">
       <div>
-        <h2 id="maintenance-title">Add Maintenance</h2>
-        <p>Schedule and manage vehicle maintenance activities.</p>
+        <h2 id="maintenance-title">
+          {{ editingRecord() ? 'Edit Maintenance' : 'Add Maintenance' }}
+        </h2>
+        <p>
+          {{
+            editingRecord()
+              ? 'Update the scheduled maintenance activity.'
+              : 'Schedule and manage vehicle maintenance activities.'
+          }}
+        </p>
       </div>
       <button class="icon-button" type="button" aria-label="Close" (click)="closeRequested.emit()">
         <app-icon name="close"></app-icon>
@@ -25,15 +33,19 @@
           </div>
         </div>
         <label class="field"
-          ><span>Vehicle <b>*</b></span
-          ><select formControlName="vehicleId">
-            <option value="">Select vehicle</option>
-            @for (vehicle of vehicles(); track vehicle.carId) {
-              <option [value]="vehicle.carId">
-                {{ vehicle.regNo }} · {{ vehicle.brand }} {{ vehicle.model }}
-              </option>
-            }
-          </select>
+          ><span>Vehicle <b>*</b></span>
+          @if (editingRecord(); as record) {
+            <input [value]="record.registrationNumber" readonly />
+          } @else {
+            <select formControlName="vehicleId">
+              <option value="">Select vehicle</option>
+              @for (vehicle of vehicles(); track vehicle.carId) {
+                <option [value]="vehicle.carId">
+                  {{ vehicle.regNo }} &middot; {{ vehicle.brand }} {{ vehicle.model }}
+                </option>
+              }
+            </select>
+          }
           @if (form().get('vehicleId')?.touched && form().get('vehicleId')?.invalid) {
             <small class="field-error">Select a vehicle.</small>
           }
@@ -98,14 +110,25 @@
         ></label>
         <label class="field"
           ><span>Service provider</span
-          ><input formControlName="serviceProvider" placeholder="Enter service provider"
-        /></label>
+          ><input formControlName="serviceProvider" placeholder="Enter service provider" /></label
+        ><label class="field"
+          ><span>Status <b>*</b></span
+          ><select formControlName="status">
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="DUE">Due</option>
+            <option value="IN_PROGRESS">In progress</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select></label
+        ><label class="field full"
+          ><span>Notes</span
+          ><textarea formControlName="notes" placeholder="Enter maintenance notes"></textarea>
+        </label>
       </div>
       <div class="drawer-footer">
         <button class="button secondary" type="button" (click)="closeRequested.emit()">
           Cancel</button
         ><button class="button primary" type="submit" [disabled]="form().invalid || saving()">
-          {{ saving() ? 'Adding...' : 'Add Maintenance' }}
+          {{ saving() ? 'Saving...' : editingRecord() ? 'Update Maintenance' : 'Add Maintenance' }}
         </button>
       </div>
     </form>

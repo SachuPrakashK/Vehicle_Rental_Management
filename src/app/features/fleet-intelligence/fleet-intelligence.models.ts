@@ -53,6 +53,8 @@ export interface MaintenanceRecord {
   serviceProvider: string | null;
   status: 'SCHEDULED' | 'DUE' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   notes: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 export interface VehicleHealth {
   vehicleRef: string;
@@ -104,6 +106,8 @@ export interface FleetGeofence {
   centerLongitude: number;
   radiusMeters: number;
   status: 'ACTIVE' | 'INACTIVE';
+  createdAt: string;
+  updatedAt: string;
 }
 export interface FleetForecast {
   vehicleRef: string;

@@ -41,6 +41,14 @@ export async function maintenance() {
   ).rows;
 }
 
+export async function maintenanceById(id: string) {
+  const record = (
+    await pool.query(`SELECT ${recordColumns} FROM fleet_maintenance_records WHERE id=$1`, [id])
+  ).rows[0];
+  if (!record) throw new AppError(404, 'Maintenance record not found.');
+  return record;
+}
+
 export async function createMaintenance(value: Record<string, unknown>, userId: string) {
   return (
     await pool.query(
@@ -64,6 +72,50 @@ export async function createMaintenance(value: Record<string, unknown>, userId: 
       ],
     )
   ).rows[0];
+}
+
+export async function updateMaintenance(id: string, value: Record<string, unknown>) {
+  const result = await pool.query(
+    `UPDATE fleet_maintenance_records SET maintenance_type=$2,description=$3,scheduled_date=$4,
+     odometer_reading=$5,estimated_cost=$6,service_provider=$7,status=$8,notes=$9,updated_at=now()
+     WHERE id=$1 AND status!='COMPLETED' RETURNING ${recordColumns}`,
+    [
+      id,
+      value['maintenanceType'],
+      value['description'],
+      value['scheduledDate'],
+      value['odometerReading'] ?? null,
+      value['estimatedCost'] ?? null,
+      value['serviceProvider'] ?? null,
+      value['status'],
+      value['notes'] ?? null,
+    ],
+  );
+  if (!result.rows[0]) {
+    const record = await pool.query<{ status: string }>(
+      'SELECT status FROM fleet_maintenance_records WHERE id=$1',
+      [id],
+    );
+    if (!record.rows[0]) throw new AppError(404, 'Maintenance record not found.');
+    throw new AppError(409, 'Completed maintenance records cannot be edited.');
+  }
+  return result.rows[0];
+}
+
+export async function deleteMaintenance(id: string) {
+  const result = await pool.query(
+    `DELETE FROM fleet_maintenance_records WHERE id=$1 AND status!='COMPLETED'
+     RETURNING id,status`,
+    [id],
+  );
+  if (!result.rows[0]) {
+    const record = await pool.query<{ status: string }>(
+      'SELECT status FROM fleet_maintenance_records WHERE id=$1',
+      [id],
+    );
+    if (!record.rows[0]) throw new AppError(404, 'Maintenance record not found.');
+    throw new AppError(409, 'Completed maintenance records must be retained for audit history.');
+  }
 }
 
 export async function completeMaintenance(id: string, value: Record<string, unknown>) {
@@ -316,7 +368,11 @@ export async function updateAlert(
        resolved_at "resolvedAt",created_at "createdAt"`,
     [id, action, userId, notes ?? null],
   );
-  if (!result.rows[0]) throw new AppError(409, 'The alert was not found or has already changed status. Refresh the list.');
+  if (!result.rows[0])
+    throw new AppError(
+      409,
+      'The alert was not found or has already changed status. Refresh the list.',
+    );
   return result.rows[0];
 }
 
@@ -449,8 +505,21 @@ export async function forecasts() {
 export async function geofences() {
   return (
     await pool.query(`SELECT id,name,description,center_latitude::float8 "centerLatitude",center_longitude::float8 "centerLongitude",
-    radius_meters "radiusMeters",status,created_at "createdAt" FROM fleet_geofences ORDER BY name`)
+    radius_meters "radiusMeters",status,created_at "createdAt",updated_at "updatedAt" FROM fleet_geofences ORDER BY name`)
   ).rows;
+}
+
+export async function geofenceById(id: string) {
+  const geofence = (
+    await pool.query(
+      `SELECT id,name,description,center_latitude::float8 "centerLatitude",
+       center_longitude::float8 "centerLongitude",radius_meters "radiusMeters",status,
+       created_at "createdAt",updated_at "updatedAt" FROM fleet_geofences WHERE id=$1`,
+      [id],
+    )
+  ).rows[0];
+  if (!geofence) throw new AppError(404, 'Geofence not found.');
+  return geofence;
 }
 
 export async function createGeofence(value: Record<string, unknown>, userId: string) {
@@ -469,6 +538,33 @@ export async function createGeofence(value: Record<string, unknown>, userId: str
       ],
     )
   ).rows[0];
+}
+
+export async function updateGeofence(id: string, value: Record<string, unknown>, userId: string) {
+  const result = await pool.query(
+    `UPDATE fleet_geofences SET name=$2,description=$3,center_latitude=$4,center_longitude=$5,
+     radius_meters=$6,status=$7,created_by=COALESCE(created_by,$8),updated_at=now()
+     WHERE id=$1 RETURNING id,name,description,center_latitude::float8 "centerLatitude",
+     center_longitude::float8 "centerLongitude",radius_meters "radiusMeters",status,
+     created_at "createdAt",updated_at "updatedAt"`,
+    [
+      id,
+      value['name'],
+      value['description'] ?? null,
+      value['centerLatitude'],
+      value['centerLongitude'],
+      value['radiusMeters'],
+      value['status'],
+      userId,
+    ],
+  );
+  if (!result.rows[0]) throw new AppError(404, 'Geofence not found.');
+  return result.rows[0];
+}
+
+export async function deleteGeofence(id: string) {
+  const result = await pool.query('DELETE FROM fleet_geofences WHERE id=$1 RETURNING id', [id]);
+  if (!result.rows[0]) throw new AppError(404, 'Geofence not found.');
 }
 
 export async function analytics() {

@@ -19,6 +19,7 @@
         <th>Odometer</th>
         <th>Estimated cost</th>
         <th>Status</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -35,12 +36,21 @@
             {{ record.estimatedCost == null ? '—' : (record.estimatedCost | currency: 'INR') }}
           </td>
           <td>
-            <span class="fleet-status" [ngClass]="record.status | fleetStatusClass">{{ record.status | fleetStatus }}</span>
+            <span class="fleet-status" [ngClass]="record.status | fleetStatusClass">{{
+              record.status | fleetStatus
+            }}</span>
+          </td>
+          <td>
+            <app-action-menu
+              [items]="actions(record)"
+              [label]="'Actions for ' + record.registrationNumber"
+              (selected)="actionRequested.emit({ action: $event, record: record })"
+            />
           </td>
         </tr>
       } @empty {
         <tr>
-          <td colspan="6">
+          <td colspan="7">
             <div class="empty-state">
               <app-icon name="wrench"></app-icon>
               <h3>No maintenance records</h3>

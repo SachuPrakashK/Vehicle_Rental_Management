@@ -11,6 +11,7 @@ import { IconComponent } from '../../../../shared/icons/icon.component';
 export class GeofenceDialogComponent {
   readonly form = input.required<FormGroup>();
   readonly saving = input(false);
+  readonly editing = input(false);
   readonly saveRequested = output<void>();
   readonly closeRequested = output<void>();
 }
