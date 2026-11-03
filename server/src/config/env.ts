@@ -92,9 +92,6 @@ if (!parsed.success) {
   );
 }
 export const env = parsed.data;
-if (env.NODE_ENV === 'production' && (!env.SMTP_HOST || !env.SMTP_PORT || !env.SMTP_FROM)) {
-  throw new Error('SMTP configuration is required in production.');
-}
 if (env.SMTP_HOST && (!env.SMTP_PORT || !env.SMTP_FROM)) {
   throw new Error('SMTP_PORT and SMTP_FROM are required when SMTP_HOST is configured.');
 }

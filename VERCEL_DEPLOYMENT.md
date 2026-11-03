@@ -43,8 +43,11 @@ Required:
 - `FRONTEND_ORIGIN` (the canonical HTTPS production origin, without a trailing slash)
 - `COOKIE_SECURE=true`
 - `COOKIE_SAME_SITE=lax`
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM`
 - `IMAGE_STORAGE_DRIVER=vercel-blob` and the Vercel-managed `BLOB_READ_WRITE_TOKEN`
+
+Optional:
+
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM`. Configure these together to enable password-reset email delivery. Missing SMTP configuration does not prevent the health, login, or other API endpoints from starting.
 
 Recommended pool limits for a serverless deployment are included in the example. Keep `COOKIE_DOMAIN` empty for host-only cookies. Vercel injects `VERCEL_URL`; the API accepts that exact origin for preview deployments in addition to `FRONTEND_ORIGIN`.
 
@@ -63,7 +66,7 @@ $env:DATABASE_SSL_MODE = 'verify-full'
 npm.cmd --prefix server run db:migrate
 ```
 
-The reviewed `001_auth.sql` and `002_bikes.sql` migrations were applied on 30 October 2026. Read-only verification confirmed both migration records and the `users`, `refresh_sessions`, `password_reset_tokens`, and `bikes` tables. Do not run `db:seed` automatically or as part of a Vercel build; no production seed was executed.
+The reviewed migrations `001_auth.sql` through `005_smart_fleet_intelligence.sql` are applied. Migrations 003–005 were applied on 4 November 2026 to provide the RBAC and Smart Fleet schema required by the deployed application. Read-only verification confirmed all five migration records, three system roles, the existing user's restored role assignment, and 52 permissions. Do not run `db:seed` automatically or as part of a Vercel build; no production seed was executed.
 
 ## Image storage
 
@@ -78,7 +81,7 @@ No existing uploaded file is migrated or deleted automatically.
 - Use `Secure`, host-only, `SameSite=Lax` cookies on the same Vercel origin.
 - CORS accepts only `FRONTEND_ORIGIN` and the exact Vercel preview URL.
 - Helmet and Vercel response headers provide baseline browser hardening.
-- SMTP is mandatory in production so password reset cannot silently discard mail.
+- SMTP configuration is optional for API availability and required for password-reset email delivery. Partially configured SMTP settings fail startup validation.
 - Preview uses a test-only Ethereal SMTP account. Production SMTP remains intentionally unset pending a provider account and an owned, verified sending domain. The Vercel account had no owned domains when checked on 30 October 2026; the available Resend integration cannot be provisioned honestly without one.
 
 Endpoint-specific application limits remain in process memory. A global Vercel Firewall rule named `Fleetline API global rate limit` was published on 30 October 2026 and limits paths beginning with `/api` to 100 requests per 60 seconds per IP, denying excess traffic across all serverless instances.
@@ -122,7 +125,7 @@ Verified Preview URL:
 
 `https://fleetline-ennc0i3k9-sachuprakashk-4789s-projects.vercel.app`
 
-The canonical Production alias is `https://fleetline-rental-management.vercel.app`, and `FRONTEND_ORIGIN` is configured to match it. The first plain `vercel deploy` was unexpectedly assigned to Vercel's Production target because it was the project's first deployment, despite not using `--prod`. Production SMTP remains unset, so the API intentionally fails its startup validation and the alias must not yet be treated as operational.
+The canonical Production alias is `https://fleetline-rental-management.vercel.app`, and `FRONTEND_ORIGIN` is configured to match it. The first plain `vercel deploy` was unexpectedly assigned to Vercel's Production target because it was the project's first deployment, despite not using `--prod`. Production SMTP remains unset, so password-reset email delivery is unavailable until a sender is configured; core API availability is not coupled to SMTP.
 
 For another Preview deployment:
 
@@ -136,7 +139,7 @@ Do not add `.env.vercel.local` to Git. Verify `/api/health`, deep-link refreshes
 
 ## Production and rollback
 
-Production deployment was explicitly approved on 30 October 2026, but the release remains blocked until a real production SMTP sender is configured and verified. Once that prerequisite is satisfied:
+For a production deployment:
 
 ```powershell
 npm.cmd exec --yes --package=vercel@latest -- vercel deploy --prod
@@ -146,7 +149,7 @@ For application rollback, use Vercel's deployment history to promote the last ve
 
 ## Troubleshooting
 
-- API startup failure: verify every required production environment variable, especially SMTP and database TLS values.
+- API startup failure: verify every required production environment variable and database TLS values. If SMTP is configured, verify `SMTP_HOST`, `SMTP_PORT`, and `SMTP_FROM` are all present, with `SMTP_USER` and `SMTP_PASSWORD` either both present or both absent.
 - Database certificate error: install the provider CA in `DATABASE_SSL_CA`; do not disable verification merely to silence the error.
 - Refresh cookie missing: confirm a same-origin `/api` request, HTTPS, `COOKIE_SECURE=true`, `COOKIE_SAME_SITE=lax`, and an empty `COOKIE_DOMAIN`.
 - Angular route returns 404: confirm `vercel.json` is at the project root and output is `dist/fleetline/browser`.
