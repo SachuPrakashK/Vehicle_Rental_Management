@@ -1,0 +1,81 @@
+<div class="list-heading">
+  <div>
+    <h2>Fleet analytics</h2>
+    <p>Maintenance cost and downtime calculated from local fleet records.</p>
+  </div>
+</div>
+<div class="card table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Vehicle</th>
+        <th>Services</th>
+        <th>Maintenance cost</th>
+        <th>Downtime</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of analytics(); track item.registrationNumber) {
+        <tr>
+          <td>{{ item.registrationNumber }}</td>
+          <td>{{ item.serviceCount }}</td>
+          <td>{{ item.maintenanceCost | currency: 'INR' }}</td>
+          <td>{{ item.downtimeDays }} days</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4">
+            <div class="empty-state">
+              <h3>No analytics available</h3>
+              <p>Completed maintenance records will appear here.</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<div class="list-heading fleet-section-heading">
+  <div>
+    <h2>Maintenance forecast</h2>
+    <p>Transparent interval rules from recorded schedule history.</p>
+  </div>
+</div>
+<div class="card table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Vehicle</th>
+        <th>Service</th>
+        <th>Due date</th>
+        <th>Due odometer</th>
+        <th>Forecast</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of forecasts(); track item.vehicleRef + item.serviceType) {
+        <tr>
+          <td>{{ item.registrationNumber }}</td>
+          <td>{{ item.serviceType }}</td>
+          <td>{{ item.nextDueDate ?? '—' }}</td>
+          <td>{{ item.nextDueOdometer ?? '—' }}</td>
+          <td>
+            <span class="status" [class.warning]="item.forecastStatus !== 'PLANNED'">{{
+              item.forecastStatus
+            }}</span
+            ><small class="table-subtitle">Deterministic interval</small>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <h3>No forecasts available</h3>
+              <p>Create a maintenance schedule with a date or odometer interval.</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

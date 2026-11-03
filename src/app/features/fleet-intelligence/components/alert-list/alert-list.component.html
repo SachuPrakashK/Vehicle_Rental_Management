@@ -1,0 +1,58 @@
+<div class="list-heading">
+  <div>
+    <h2>Fleet alerts</h2>
+    <p>Maintenance and telematics events requiring attention.</p>
+  </div>
+</div>
+<div class="card table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Severity</th>
+        <th>Vehicle</th>
+        <th>Message</th>
+        <th>Created</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (alert of alerts(); track alert.id) {
+        <tr>
+          <td>
+            <span
+              class="status"
+              [class.warning]="alert.severity === 'WARNING'"
+              [class.error]="alert.severity === 'CRITICAL'"
+              >{{ alert.severity }}</span
+            >
+          </td>
+          <td>{{ alert.registrationNumber ?? 'Fleet' }}</td>
+          <td>{{ alert.message }}</td>
+          <td>{{ alert.createdAt | date: 'medium' }}</td>
+          <td>{{ alert.status }}</td>
+          <td>
+            @if (alert.status === 'OPEN' && canAcknowledge()) {
+              <button
+                class="button secondary small"
+                type="button"
+                (click)="acknowledgeRequested.emit(alert)"
+              >
+                Acknowledge
+              </button>
+            }
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <h3>No alerts</h3>
+              <p>There are no fleet alerts requiring attention.</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

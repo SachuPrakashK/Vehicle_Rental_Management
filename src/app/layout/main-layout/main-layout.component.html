@@ -14,21 +14,24 @@
     </a>
 
     <nav>
-      @for (item of navigation; track item.path) {
-        @if (permissions.has(item.permission)) {
-          <div class="sidebar-nav">
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{ exact: true }"
-              ariaCurrentWhenActive="page"
-              [attr.title]="item.label"
-            >
-              <app-icon [name]="item.icon"></app-icon>
-              <span class="nav-label">{{ item.label }}</span>
-            </a>
-          </div>
-        }
+      @for (group of navigationGroups(); track group.label) {
+        <section class="sidebar-group" [attr.aria-label]="group.label">
+          <div class="sidebar-section">{{ group.label }}</div>
+          @for (item of group.items; track item.path) {
+            <div class="sidebar-nav">
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: item.exact ?? true }"
+                ariaCurrentWhenActive="page"
+                [attr.title]="item.label"
+              >
+                <app-icon [name]="item.icon"></app-icon>
+                <span class="nav-label">{{ item.label }}</span>
+              </a>
+            </div>
+          }
+        </section>
       }
     </nav>
 

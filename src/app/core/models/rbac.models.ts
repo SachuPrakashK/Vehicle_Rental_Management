@@ -29,7 +29,28 @@ export type PermissionCode =
   | 'roles.edit'
   | 'roles.delete'
   | 'roles.assign_permissions'
-  | 'authorization.audit';
+  | 'authorization.audit'
+  | 'fleet.overview.view'
+  | 'fleet.tracking.view'
+  | 'fleet.tracking.history.view'
+  | 'fleet.tracking.devices.manage'
+  | 'fleet.health.view'
+  | 'fleet.health.assess'
+  | 'fleet.maintenance.view'
+  | 'fleet.maintenance.create'
+  | 'fleet.maintenance.edit'
+  | 'fleet.maintenance.complete'
+  | 'fleet.maintenance.delete'
+  | 'fleet.geofences.view'
+  | 'fleet.geofences.create'
+  | 'fleet.geofences.edit'
+  | 'fleet.geofences.delete'
+  | 'fleet.alerts.view'
+  | 'fleet.alerts.acknowledge'
+  | 'fleet.alerts.resolve'
+  | 'fleet.analytics.view'
+  | 'fleet.analytics.export'
+  | 'fleet.predictions.view';
 
 export interface Permission {
   id: string;

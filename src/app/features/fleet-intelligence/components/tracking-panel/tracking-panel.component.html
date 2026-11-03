@@ -1,0 +1,24 @@
+<div class="list-heading">
+  <div>
+    <h2>Fleet tracking</h2>
+    <p>
+      {{
+        tracking()?.providerConfigured
+          ? 'Self-managed Traccar provider configured'
+          : 'Local simulation mode'
+      }}
+    </p>
+  </div>
+  @if (capabilities()?.simulator && canSimulate()) {
+    <button class="button primary" type="button" (click)="simulationRequested.emit()">
+      <app-icon name="location"></app-icon>Add simulated position
+    </button>
+  }
+</div>
+@if (tracking()?.mode === 'SIMULATION') {
+  <div class="simulation-banner">
+    <app-icon name="warning"></app-icon><strong>Simulation mode</strong
+    ><span>All displayed positions are simulated test data, not actual vehicle locations.</span>
+  </div>
+}
+<div class="card"><app-fleet-map [positions]="tracking()?.positions ?? []"></app-fleet-map></div>

@@ -1,0 +1,172 @@
+<div class="notice info">
+  <app-icon name="info"></app-icon>
+  <p>
+    Health and forecasts are deterministic decision-support indicators. They do not replace
+    qualified mechanical inspection.
+  </p>
+</div>
+<div class="stats-grid fleet-stats">
+  <article class="stat-card primary">
+    <div class="stat-top"><span>Open maintenance</span><app-icon name="wrench"></app-icon></div>
+    <div class="stat-value">{{ overview()?.openMaintenance ?? 0 }}</div>
+    <div class="stat-foot">Scheduled, due, or in progress</div>
+  </article>
+  <article class="stat-card secondary">
+    <div class="stat-top"><span>Overdue maintenance</span><app-icon name="warning"></app-icon></div>
+    <div class="stat-value">{{ overview()?.overdueMaintenance ?? 0 }}</div>
+    <div class="stat-foot">Requires operational review</div>
+  </article>
+  <article class="stat-card yellow">
+    <div class="stat-top"><span>Open alerts</span><app-icon name="info"></app-icon></div>
+    <div class="stat-value">{{ overview()?.openAlerts ?? 0 }}</div>
+    <div class="stat-foot">{{ overview()?.criticalAlerts ?? 0 }} critical</div>
+  </article>
+  <article class="stat-card purple">
+    <div class="stat-top"><span>Tracked vehicles</span><app-icon name="location"></app-icon></div>
+    <div class="stat-value">{{ overview()?.trackedVehicles ?? 0 }}</div>
+    <div class="stat-foot">Latest recorded positions</div>
+  </article>
+</div>
+<section class="fleet-overview-grid">
+  <article class="card fleet-maintenance-chart">
+    <div class="card-heading">
+      <div>
+        <h2>Maintenance & vehicle health</h2>
+        <p>Mutually exclusive status across vehicles with fleet records.</p>
+      </div>
+    </div>
+    <div class="card-body">
+      @if ((overview()?.maintenanceStatus?.knownVehicles ?? 0) > 0) {
+        <div class="fleet-donut-layout">
+          <div
+            class="fleet-donut"
+            [style.--healthy]="overview()!.maintenanceStatus.healthy"
+            [style.--due]="overview()!.maintenanceStatus.dueSoon"
+            [style.--overdue]="overview()!.maintenanceStatus.overdue"
+            [style.--maintenance]="overview()!.maintenanceStatus.underMaintenance"
+            [style.--total]="overview()!.maintenanceStatus.knownVehicles"
+          >
+            <span
+              ><strong>{{ overview()!.maintenanceStatus.knownVehicles }}</strong
+              >vehicles</span
+            >
+          </div>
+          <div class="fleet-chart-legend">
+            <span class="healthy"
+              ><i></i>Healthy <strong>{{ overview()!.maintenanceStatus.healthy }}</strong></span
+            ><span class="due"
+              ><i></i>Due soon <strong>{{ overview()!.maintenanceStatus.dueSoon }}</strong></span
+            ><span class="overdue"
+              ><i></i>Overdue <strong>{{ overview()!.maintenanceStatus.overdue }}</strong></span
+            ><span class="maintenance"
+              ><i></i>Under maintenance
+              <strong>{{ overview()!.maintenanceStatus.underMaintenance }}</strong></span
+            >
+          </div>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <app-icon name="intelligence"></app-icon>
+          <h3>No maintenance analytics yet</h3>
+          <p>Create maintenance schedules or inspections to build an operational fleet view.</p>
+        </div>
+      }
+    </div>
+  </article>
+  @if (canViewHealth()) {
+    <article class="card fleet-health-summary">
+      <div class="card-heading">
+        <div>
+          <h2>Assessed fleet health</h2>
+          <p>Explainable rule-based assessments only.</p>
+        </div>
+        <a routerLink="/fleet-intelligence/health" class="button secondary small">View health</a>
+      </div>
+      <div class="card-body">
+        @if ((overview()?.fleetHealth?.assessedVehicles ?? 0) > 0) {
+          <div class="fleet-health-value">
+            {{ overview()!.fleetHealth.averageScore }}<small>/100</small>
+          </div>
+          <p>
+            Based on {{ overview()!.fleetHealth.assessedVehicles }} assessed vehicle(s) with
+            {{ overview()!.fleetHealth.averageCompleteness }}% average data completeness.
+          </p>
+        } @else {
+          <div class="empty-state compact">
+            <h3>No reliable health aggregate</h3>
+            <p>Health will appear after vehicles have assessment history.</p>
+          </div>
+        }
+      </div>
+    </article>
+  }
+</section>
+@if (canViewMaintenance()) {
+  <section class="card fleet-upcoming">
+    <div class="card-heading">
+      <div>
+        <h2>Upcoming maintenance</h2>
+        <p>Most urgent active service schedules.</p>
+      </div>
+      <a routerLink="/fleet-intelligence/maintenance" class="button secondary small">View all</a>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Service type</th>
+            <th>Due date</th>
+            <th>Remaining km</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (
+            item of overview()?.upcomingMaintenance ?? [];
+            track item.vehicleRef + item.serviceType
+          ) {
+            <tr>
+              <td>
+                <strong>{{ item.registrationNumber }}</strong>
+              </td>
+              <td>{{ item.serviceType }}</td>
+              <td>{{ item.dueDate | date: 'mediumDate' }}</td>
+              <td>{{ item.remainingKm ?? '—' }}</td>
+              <td>
+                <span
+                  class="status"
+                  [class.warning]="item.status === 'DUE_SOON'"
+                  [class.error]="item.status === 'OVERDUE'"
+                  >{{
+                    item.status === 'DUE_SOON'
+                      ? 'Due soon'
+                      : item.status === 'OVERDUE'
+                        ? 'Overdue'
+                        : 'Planned'
+                  }}</span
+                >
+              </td>
+              <td>
+                <a class="button secondary small" routerLink="/fleet-intelligence/maintenance"
+                  >View maintenance</a
+                >
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <app-icon name="calendar"></app-icon>
+                  <h3>No upcoming maintenance</h3>
+                  <p>No active dated service schedules require attention.</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

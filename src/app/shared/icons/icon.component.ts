@@ -28,9 +28,15 @@ export const iconPaths = {
   money: 'M3 5h18v14H3z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M6 12h.1 M18 12h.1',
   arrow: 'M4 12h16 M14 6l6 6-6 6',
   shield: 'm12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6z M8 12l3 3 5-6',
+  usersSettings:
+    'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M8.5 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M19 8v6 M16 11h6',
+  shieldCheck: 'm12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6z M8 12l3 3 5-6',
   moreVertical: 'M12 5h.01 M12 12h.01 M12 19h.01',
   bookVehicle:
     'M3 16v-5l2-5h10l2 5v5 M3 12h14 M6 15h2 M13 15h2 M5 16v3 M15 16v3 M18 4h4v5h-4z M20 2v4 M18 6h4',
+  intelligence: 'M3 20h18 M5 17V9h4v8 M10 17V4h4v13 M15 17v-6h4v6 M4 7l5-3 4 3 7-5',
+  location: 'M12 21s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12 M12 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
+  wrench: 'M14 7a5 5 0 0 0-7-4l3 3-4 4-3-3a5 5 0 0 0 7 7l7 7 4-4-7-7a5 5 0 0 0 0-3',
 } as const;
 export type IconName = keyof typeof iconPaths;
 @Component({

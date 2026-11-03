@@ -1,0 +1,131 @@
+<section class="dashboard-smart-fleet" aria-labelledby="smart-fleet-heading">
+  <div class="list-heading">
+    <div>
+      <h2 id="smart-fleet-heading">Fleet Health & Maintenance</h2>
+      <p>Urgent operational intelligence from Smart Fleet.</p>
+    </div>
+    <a class="button secondary small" routerLink="/fleet-intelligence">Open Smart Fleet</a>
+  </div>
+  @if (loading()) {
+    <div class="card loading-state"><span class="spinner"></span>Loading fleet health...</div>
+  } @else if (error()) {
+    <div class="card error-state">
+      <p>{{ error() }}</p>
+    </div>
+  } @else if (overview(); as fleet) {
+    <div class="stats-grid fleet-dashboard-stats">
+      @if (canViewMaintenance()) {
+        <a class="stat-card secondary" routerLink="/fleet-intelligence/maintenance"
+          ><div class="stat-top">
+            <span>Vehicles due for service</span><app-icon name="calendar"></app-icon>
+          </div>
+          <div class="stat-value">{{ fleet.maintenanceStatus.dueSoon }}</div>
+          <div class="stat-foot">Active schedules approaching their threshold</div></a
+        >
+        <a class="stat-card primary" routerLink="/fleet-intelligence/maintenance"
+          ><div class="stat-top">
+            <span>Under maintenance</span><app-icon name="wrench"></app-icon>
+          </div>
+          <div class="stat-value">{{ fleet.maintenanceStatus.underMaintenance }}</div>
+          <div class="stat-foot">Vehicles with work currently in progress</div></a
+        >
+      }
+      @if (canViewAlerts()) {
+        <a class="stat-card yellow" routerLink="/fleet-intelligence/alerts"
+          ><div class="stat-top">
+            <span>Critical fleet alerts</span><app-icon name="warning"></app-icon>
+          </div>
+          <div class="stat-value">{{ fleet.criticalAlerts }}</div>
+          <div class="stat-foot">Unresolved critical alerts</div></a
+        >
+      }
+      @if (canViewHealth()) {
+        <a class="stat-card purple" routerLink="/fleet-intelligence/health"
+          ><div class="stat-top">
+            <span>Fleet health</span><app-icon name="intelligence"></app-icon>
+          </div>
+          <div class="stat-value">
+            {{ fleet.fleetHealth.assessedVehicles ? fleet.fleetHealth.averageScore : '—' }}
+          </div>
+          <div class="stat-foot">
+            @if (fleet.fleetHealth.assessedVehicles) {
+              {{ fleet.fleetHealth.assessedVehicles }} assessed ·
+              {{ fleet.fleetHealth.averageCompleteness }}% completeness
+            } @else {
+              No reliable aggregate available
+            }
+          </div></a
+        >
+      }
+    </div>
+    @if (canViewMaintenance()) {
+      <article class="card">
+        <div class="card-heading">
+          <div>
+            <h2>Maintenance attention required</h2>
+            <p>Overdue and upcoming service schedules, ordered by urgency.</p>
+          </div>
+          <a class="button secondary small" routerLink="/fleet-intelligence/maintenance"
+            >View all</a
+          >
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Maintenance</th>
+                <th>Due</th>
+                <th>Severity</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (
+                item of fleet.upcomingMaintenance.slice(0, 5);
+                track item.vehicleRef + item.serviceType
+              ) {
+                <tr>
+                  <td>
+                    <strong>{{ item.registrationNumber }}</strong>
+                  </td>
+                  <td>{{ item.serviceType }}</td>
+                  <td>{{ item.dueDate | date: 'mediumDate' }}</td>
+                  <td>
+                    <span
+                      class="status"
+                      [class.error]="item.status === 'OVERDUE'"
+                      [class.warning]="item.status === 'DUE_SOON'"
+                      >{{
+                        item.status === 'OVERDUE'
+                          ? 'Overdue'
+                          : item.status === 'DUE_SOON'
+                            ? 'Due soon'
+                            : 'Planned'
+                      }}</span
+                    >
+                  </td>
+                  <td>
+                    <a class="button secondary small" routerLink="/fleet-intelligence/maintenance"
+                      >View details</a
+                    >
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <app-icon name="success"></app-icon>
+                      <h3>No maintenance attention required</h3>
+                      <p>No active dated schedules currently require attention.</p>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    }
+  }
+</section>

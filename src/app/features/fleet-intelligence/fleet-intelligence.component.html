@@ -1,0 +1,97 @@
+<app-page-header
+  title="Smart Fleet Intelligence"
+  description="Explainable maintenance, health, tracking, and fleet insights"
+></app-page-header>
+
+<nav class="fleet-tabs" aria-label="Fleet intelligence sections">
+  @for (item of sections; track item.key) {
+    @if (permissions.has(item.permission)) {
+      <a
+        [routerLink]="
+          item.key === 'overview' ? '/fleet-intelligence' : '/fleet-intelligence/' + item.key
+        "
+        [class.active]="section() === item.key"
+        >{{ item.label }}</a
+      >
+    }
+  }
+</nav>
+
+@if (loading()) {
+  <div class="loading-state"><span class="spinner"></span>Loading fleet data...</div>
+} @else {
+  @switch (section()) {
+    @case ('overview') {
+      <app-fleet-overview
+        [overview]="overview()"
+        [canViewMaintenance]="permissions.has('fleet.maintenance.view')"
+        [canViewHealth]="permissions.has('fleet.health.view')"
+      ></app-fleet-overview>
+    }
+    @case ('maintenance') {
+      <app-maintenance-list
+        [records]="maintenance()"
+        [canCreate]="permissions.has('fleet.maintenance.create')"
+        (addRequested)="maintenanceOpen.set(true)"
+      ></app-maintenance-list>
+    }
+    @case ('health') {
+      <app-health-list [health]="health()"></app-health-list>
+    }
+    @case ('tracking') {
+      <app-tracking-panel
+        [tracking]="tracking()"
+        [capabilities]="capabilities()"
+        [canSimulate]="permissions.has('fleet.tracking.devices.manage')"
+        (simulationRequested)="simulationOpen.set(true)"
+      ></app-tracking-panel>
+    }
+    @case ('geofences') {
+      <app-geofence-list
+        [geofences]="geofences()"
+        [canCreate]="permissions.has('fleet.geofences.create')"
+        (addRequested)="geofenceOpen.set(true)"
+      ></app-geofence-list>
+    }
+    @case ('alerts') {
+      <app-alert-list
+        [alerts]="alerts()"
+        [canAcknowledge]="permissions.has('fleet.alerts.acknowledge')"
+        (acknowledgeRequested)="acknowledge($event)"
+      ></app-alert-list>
+    }
+    @case ('analytics') {
+      <app-analytics-panel
+        [analytics]="analytics()"
+        [forecasts]="forecasts()"
+      ></app-analytics-panel>
+    }
+  }
+}
+
+@if (maintenanceOpen()) {
+  <app-maintenance-dialog
+    [form]="maintenanceForm"
+    [vehicles]="vehicles()"
+    [saving]="saving()"
+    (saveRequested)="saveMaintenance()"
+    (closeRequested)="closePanels()"
+  ></app-maintenance-dialog>
+}
+@if (geofenceOpen()) {
+  <app-geofence-dialog
+    [form]="geofenceForm"
+    [saving]="saving()"
+    (saveRequested)="saveGeofence()"
+    (closeRequested)="closePanels()"
+  ></app-geofence-dialog>
+}
+@if (simulationOpen()) {
+  <app-simulation-dialog
+    [form]="simulationForm"
+    [vehicles]="vehicles()"
+    [saving]="saving()"
+    (saveRequested)="sendSimulation()"
+    (closeRequested)="closePanels()"
+  ></app-simulation-dialog>
+}

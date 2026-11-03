@@ -22,6 +22,15 @@ import { IconComponent, IconName } from '../../shared/icons/icon.component';
 import type { PermissionCode } from '../../core/models/rbac.models';
 import { PermissionService } from '../../core/services/permission.service';
 import { FeedbackService } from '../../core/services/feedback.service';
+
+interface NavigationItem {
+  label: string;
+  path: string;
+  icon: IconName;
+  section?: string;
+  exact?: boolean;
+  permission: PermissionCode;
+}
 @Component({
   selector: 'app-main-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
@@ -53,24 +62,19 @@ export class MainLayoutComponent {
   readonly collapsed = signal(false);
   readonly mobileOpen = signal(false);
   readonly profileOpen = signal(false);
-  readonly navigation: {
-    label: string;
-    path: string;
-    icon: IconName;
-    section?: string;
-    permission: PermissionCode;
-  }[] = [
+  readonly navigation: NavigationItem[] = [
     {
       label: 'Dashboard',
       path: '/dashboard',
       icon: 'dashboard',
-      section: 'RENTALS',
+      section: 'OVERVIEW',
       permission: 'dashboard.view',
     },
     {
       label: 'Book vehicle',
       path: '/book-vehicle',
       icon: 'bookVehicle',
+      section: 'RENTAL OPERATIONS',
       permission: 'bookings.create',
     },
     { label: 'Vehicles', path: '/vehicles', icon: 'vehicle', permission: 'vehicles.view' },
@@ -83,19 +87,38 @@ export class MainLayoutComponent {
       permission: 'ledger.view',
     },
     {
+      label: 'Smart Fleet',
+      path: '/fleet-intelligence',
+      icon: 'intelligence',
+      section: 'FLEET INTELLIGENCE',
+      exact: false,
+      permission: 'fleet.overview.view',
+    },
+    {
       label: 'Admin users',
       path: '/admin-users',
-      icon: 'shield',
-      section: 'MANAGEMENT',
+      icon: 'usersSettings',
+      section: 'ADMINISTRATION',
       permission: 'users.view',
     },
     {
       label: 'Roles & permissions',
       path: '/roles-permissions',
-      icon: 'shield',
+      icon: 'shieldCheck',
       permission: 'roles.view',
     },
   ];
+  readonly navigationGroups = computed(() => {
+    const groups: { label: string; items: NavigationItem[] }[] = [];
+    for (const item of this.navigation) {
+      if (!this.permissions.has(item.permission)) continue;
+      const label = item.section ?? groups.at(-1)?.label ?? 'NAVIGATION';
+      const current = groups.at(-1);
+      if (!current || current.label !== label) groups.push({ label, items: [item] });
+      else current.items.push(item);
+    }
+    return groups;
+  });
   constructor() {
     this.router.events
       .pipe(
