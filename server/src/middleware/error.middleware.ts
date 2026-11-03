@@ -24,6 +24,14 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, _ne
     });
     return;
   }
+  if ((error as { code?: unknown }).code === '42P01') {
+    response.status(503).json({
+      success: false,
+      message: 'Required database tables are unavailable. Apply pending database migrations.',
+      errors: [],
+    });
+    return;
+  }
   const status = error instanceof AppError ? error.status : 500;
   response.status(status).json({
     success: false,

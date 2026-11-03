@@ -50,6 +50,10 @@ const schema = z.object({
   SMTP_FROM: optionalString,
   SEED_SUPER_ADMIN_EMAIL: optionalEmail,
   SEED_SUPER_ADMIN_PASSWORD: optionalString,
+  SEED_SMART_FLEET_DEMO_DATA: z
+    .string()
+    .default('false')
+    .transform((value) => value === 'true'),
   FLEET_MAINTENANCE_ENABLED: z
     .string()
     .default('true')

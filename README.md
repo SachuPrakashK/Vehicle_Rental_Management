@@ -1,24 +1,287 @@
-# Fleetline
+# Fleetline — Vehicle Rental Management System
 
-Fleetline is an Angular 22 vehicle-rental administration application with a dedicated Express authentication API. Rental data continues to use the documented CarRentalApp service; identity, sessions, roles, admin users, and profiles use the Fleetline PostgreSQL backend.
+![Fleetline logo](public/logo.svg)
 
-## Features
+**Fleetline** is a full-stack, responsive vehicle-rental administration application developed with **Angular 22, TypeScript, Node.js / Express, and PostgreSQL**. It combines rental operations, customer and account management, customizable role-based access control, and the Smart Fleet Intelligence module for maintenance and vehicle insights.
 
-- Registration, login, logout, refresh rotation, password reset, password change, and session restoration
-- PostgreSQL users, refresh sessions, and single-use password-reset records
-- SUPER_ADMIN, ADMIN, and STAFF roles with server-side authorization
-- Profile editing and profile-image upload/delete with server-side signature and 5 MB validation
-- Bike CRUD, vehicle-image uploads, fleet type filtering, and image previews
-- Dashboard period filtering with a shared chart-data modal
-- Vehicle/customer CRUD, bookings, customer ledger, dashboard, responsive shell, loaders, toasts, drawers, and confirmations
-- Angular Signals auth store, functional guards/interceptors, shared refresh flow, reactive forms, and OnPush
-- amCharts 5, centralized SCSS, local Poppins, and accessible desktop/mobile layouts
+## Contents
 
-## Technology
+- [Feature gallery](#feature-gallery)
+- [Core architecture and technology](#core-architecture-and-technology)
+- [Prerequisites and installation](#prerequisites-and-installation)
+- [Environment configuration](#environment-configuration)
+- [Authentication design](#authentication-design)
+- [Authentication API](#authentication-api)
+- [Password-reset development testing](#password-reset-development-testing)
+- [Database and architecture](#database-and-architecture)
+- [Verification](#verification)
+- [Security considerations](#security-considerations)
 
-Frontend: Angular 22.2, TypeScript 6, RxJS, SCSS, amCharts 5, Vitest, and Playwright.
+## Feature gallery
 
-Backend: Node.js, Express 5, TypeScript, PostgreSQL, bcryptjs, JWT, Zod, Multer, Helmet, CORS, SMTP, and rate limiting.
+Every card links to a screenshot file you can replace without modifying README Markdown. Screenshots should use dummy/test data and must not expose access tokens, customer PII, private locations, or credentials.
+
+### Authentication
+
+#### Login & Session Management
+
+Sign in with an existing account; use access tokens, refresh-cookie session rotation, guarded routes, and restored sessions.
+
+**Screen:** `/auth/login`  
+**Screenshot:** `docs/screenshots/login.png`
+
+![Login & Session Management — screenshot](docs/screenshots/login.png)
+
+#### User Registration
+
+Create an account through the public registration form; new registrations receive the Staff role.
+
+**Screen:** `/auth/register`  
+**Screenshot:** `docs/screenshots/register.png`
+
+![User Registration — screenshot](docs/screenshots/register.png)
+
+#### Forgot Password
+
+Request a time-limited, single-use password reset link with rate limiting and generic responses. Real email delivery requires configured SMTP.
+
+**Screen:** `/auth/forgot-password`  
+**Screenshot:** `docs/screenshots/forgot-password.png`
+
+![Forgot Password — screenshot](docs/screenshots/forgot-password.png)
+
+#### Reset Password
+
+Validate a reset token, submit a new password, and revoke existing sessions after reset.
+
+**Screen:** `/auth/reset-password`  
+**Screenshot:** `docs/screenshots/reset-password.png`
+
+![Reset Password — screenshot](docs/screenshots/reset-password.png)
+
+### Dashboard
+
+#### Main Dashboard
+
+View period-filtered booking statistics, booking charts, recent rentals, and Fleet Health & Maintenance summary cards for authorized users.
+
+**Screen:** `/dashboard`  
+**Screenshot:** `docs/screenshots/dashboard.png`
+
+![Main Dashboard — screenshot](docs/screenshots/dashboard.png)
+
+#### Smart Fleet Dashboard Summary
+
+Review service-due vehicles, maintenance downtime, critical alerts, and fleet-health coverage from the main dashboard.
+
+**Screen:** `/dashboard`  
+**Screenshot:** `docs/screenshots/smart-fleet-dashboard.png`
+
+![Smart Fleet Dashboard Summary — screenshot](docs/screenshots/smart-fleet-dashboard.png)
+
+### Rental operations
+
+#### Vehicles & Inventory
+
+Browse, search, filter, add, edit, and remove vehicle records as supported by their data source; manage bike records and validated vehicle images.
+
+**Screen:** `/vehicles`  
+**Screenshot:** `docs/screenshots/vehicles.png`
+
+![Vehicles & Inventory — screenshot](docs/screenshots/vehicles.png)
+
+#### Vehicle Create / Edit
+
+Maintain vehicle details using validated forms, images, and permitted actions. Car and bike backends have different supported operations.
+
+**Screen:** `/vehicles`  
+**Screenshot:** `docs/screenshots/vehicle-form.png`
+
+![Vehicle Create / Edit — screenshot](docs/screenshots/add-vehicle.png)
+
+#### Bookings & Rental Records
+
+Review rental bookings, booking details, and permitted management actions, with date-related views and status information.
+
+**Screen:** `/bookings`  
+**Screenshot:** `docs/screenshots/bookings.png`
+
+![Bookings & Rental Records — screenshot](docs/screenshots/bookings.png)
+
+#### Book Vehicle
+
+Use the booking form and existing rental rules to create supported reservations; unsupported bike booking is intentionally blocked.
+
+**Screen:** `/book-vehicle`  
+**Screenshot:** `docs/screenshots/book-vehicle.png`
+
+![Book Vehicle — screenshot](docs/screenshots/book-vehicle.png)
+
+#### Customers
+
+View customer records, open customer details, and perform supported create, edit, and deletion operations.
+
+**Screen:** `/customers`  
+**Screenshot:** `docs/screenshots/customers.png`
+
+![Customers — screenshot](docs/screenshots/customers.png)
+
+#### Customer Ledger
+
+Review customer-related financial and ledger entries from the existing rental data service, subject to authorized UI access.
+
+**Screen:** `/customer-ledger`  
+**Screenshot:** `docs/screenshots/customer-ledger.png`
+
+![Customer Ledger — screenshot](docs/screenshots/customer-ledger.png)
+
+### Administration
+
+#### Admin Users
+
+Manage user accounts and their statuses; create and edit users and assign authorized roles.
+
+**Screen:** `/admin-users`  
+**Screenshot:** `docs/screenshots/admin-users.png`
+
+![Admin Users — screenshot](docs/screenshots/admin-users.png)
+
+#### Assign Roles
+
+Assign active roles to users and manage role changes within Super Admin-protected workflows.
+
+**Screen:** `/admin-users`  
+**Screenshot:** `docs/screenshots/assign-roles.png`
+
+![Assign Roles — screenshot](docs/screenshots/assign-roles.png)
+
+#### Roles & Permissions
+
+Manage system and custom roles using grouped permission controls, role assignments, and server-validated updates.
+
+**Screen:** `/roles-permissions`  
+**Screenshot:** `docs/screenshots/roles-permissions.png`
+
+![Roles & Permissions — screenshot](docs/screenshots/roles-permissions.png)
+
+#### Permission Matrix
+
+Set granular View/Create/Edit/Delete and specialized module permissions, with protected system-role restrictions.
+
+**Screen:** `/roles-permissions`  
+**Screenshot:** `docs/screenshots/permission-matrix.png`
+
+![Permission Matrix — screenshot](docs/screenshots/permission-matrix.png)
+
+#### My Profile
+
+Update personal profile information, manage profile images, and change account passwords.
+
+**Screen:** `/profile`  
+**Screenshot:** `docs/screenshots/profile.png`
+
+![My Profile — screenshot](docs/screenshots/profile.png)
+
+### Smart Fleet Intelligence
+
+#### Fleet Intelligence Overview
+
+Review maintenance status chart, fleet-health coverage, urgency-ranked upcoming maintenance and aggregate operational KPIs.
+
+**Screen:** `/fleet-intelligence`  
+**Screenshot:** `docs/screenshots/fleet-overview.png`
+
+![Fleet Intelligence Overview — screenshot](docs/screenshots/fleet-overview.png)
+
+#### Maintenance Management
+
+Create maintenance records and recurring schedules, track services, due/overdue status, completion and costs.
+
+**Screen:** `/fleet-intelligence/maintenance`  
+**Screenshot:** `docs/screenshots/maintenance.png`
+
+![Maintenance Management — screenshot](docs/screenshots/maintenance.png)
+
+#### Add Maintenance Dialog
+
+Schedule a vehicle maintenance task using the structured dialog with validation, scrolling body and distinct action footer.
+
+**Screen:** `/fleet-intelligence/maintenance`  
+**Screenshot:** `docs/screenshots/add-maintenance.png`
+
+![Add Maintenance Dialog — screenshot](docs/screenshots/add-maintenance.png)
+
+#### Vehicle Health
+
+Review explainable rule-based vehicle health scores, contributing factors, inspection data and completeness indicators.
+
+**Screen:** `/fleet-intelligence/health`  
+**Screenshot:** `docs/screenshots/vehicle-health.png`
+
+![Vehicle Health — screenshot](docs/screenshots/vehicle-health.png)
+
+#### GPS Tracking
+
+View Leaflet map positions from configured telemetry devices or clearly labelled local simulation; distinguish current, stale and offline observations.
+
+**Screen:** `/fleet-intelligence/tracking`  
+**Screenshot:** `docs/screenshots/tracking.png`
+
+![GPS Tracking — screenshot](docs/screenshots/tracking.png)
+
+#### Geofences
+
+Configure circular geofences, associate vehicles, and review location boundary events and alerts where telemetry is available.
+
+**Screen:** `/fleet-intelligence/geofences`  
+**Screenshot:** `docs/screenshots/geofences.png`
+
+![Geofences — screenshot](docs/screenshots/geofences.png)
+
+#### Fleet Alerts
+
+Review and manage fleet warnings and critical events, including maintenance, device and geofence alerts, with acknowledgement/resolution.
+
+**Screen:** `/fleet-intelligence/alerts`  
+**Screenshot:** `docs/screenshots/alerts.png`
+
+![Fleet Alerts — screenshot](docs/screenshots/alerts.png)
+
+#### Fleet Analytics
+
+Analyze maintenance costs, service counts, downtime and rule-based maintenance forecasts using stored data.
+
+**Screen:** `/fleet-intelligence/analytics`  
+**Screenshot:** `docs/screenshots/fleet-analytics.png`
+
+![Fleet Analytics — screenshot](docs/screenshots/fleet-analytics.png)
+
+### Additional system capabilities
+
+- **Authentication and security:** Short-lived access JWTs, refresh-token rotation with HttpOnly cookies, hashed passwords, single-use password resets, validation, API rate limiting, and protected routes.
+- **Configurable RBAC:** Protected `SUPER_ADMIN` role, `ADMIN` and `STAFF` defaults, additional custom roles, multi-role assignments, granular permission matrix, backend enforcement on Fleetline-owned APIs, and role-change audit events.
+- **Operational usability:** Shared form validation, reusable modals and drawers, search, filtering, pagination, status feedback, confirmation dialogs, responsive layouts, theme-consistent SVG icons, and dynamic browser titles.
+- **Smart Fleet integration:** Maintenance schedules and inspections, explainable vehicle-health indicators, optional Traccar integration, labelled GPS simulation, geofence evaluation, alerts and aggregate fleet reporting.
+- **No-cost local development:** Open-source Leaflet and OpenStreetMap data; self-hostable Traccar option. Actual GPS data needs configured devices/providers, and production infrastructure can incur costs.
+
+### Important implementation and integration limits
+
+- The *CarRentalApp* service remains an external service for cars, bookings, customers, ledger, and rental dashboard data. Its backend does not gain server-side Fleetline RBAC merely because Fleetline hides UI actions. Protect or migrate those endpoints before relying on them for sensitive production data.
+- GPS simulator locations must always be labelled simulated. Live GPS tracking requires a configured real telemetry source.
+- Health scoring is explainable, **rule-based** assessment, not a medically or mechanically certified safety decision or a trained predictive AI model.
+
+## Core architecture and technology
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | Angular 22, TypeScript 6, RxJS, Angular Signals, Reactive Forms, SCSS, Poppins |
+| Visualization | amCharts 5, Leaflet, OpenStreetMap data / configurable tile source |
+| Backend | Node.js, Express 5, TypeScript, Zod |
+| Data | PostgreSQL, SQL migrations |
+| Authentication | JWT, rotating refresh tokens, bcryptjs, HttpOnly cookies, SMTP reset emails |
+| Access control | Database-driven RBAC with server-side middleware for Fleetline-owned APIs |
+| Testing | Vitest, Playwright |
+| Deployment | Vercel configuration in repository; backend and persistent jobs depend on hosting setup |
 
 ## Prerequisites and installation
 
@@ -128,7 +391,7 @@ Backend tests cover password hashing, duplicates, valid/invalid login, expired J
 
 ## Security considerations
 
-Fleetline uses database-backed RBAC with protected system roles, granular permissions, server-side enforcement for Fleetline-owned APIs, fresh permission resolution, audit logs, and Angular route/action checks. See `RBAC_ARCHITECTURE_AND_AUDIT.md` and `RBAC_PERMISSION_MATRIX.md`.
+Fleetline uses database-backed RBAC with protected system roles, granular permissions, server-side enforcement for Fleetline-owned APIs, fresh permission resolution, audit logs, and Angular route/action checks.
 
 The API uses parameterized SQL, centralized schemas, bcrypt cost 12, sanitized users, generic credential/reset responses, secure headers, strict CORS, body limits, auth rate limits, server-side roles, randomized file keys, content signatures, and safe-path deletion. It never logs passwords or tokens and never stores raw refresh/reset credentials.
 

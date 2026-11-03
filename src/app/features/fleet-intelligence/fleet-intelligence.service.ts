@@ -33,10 +33,21 @@ export class FleetIntelligenceService {
   maintenance() {
     return this.get<MaintenanceRecord[]>('/maintenance');
   }
+  maintenanceById(id: string) {
+    return this.get<MaintenanceRecord>('/maintenance/' + id);
+  }
   createMaintenance(value: unknown) {
     return this.http
       .post<AuthApiResponse<MaintenanceRecord>>(this.url + '/maintenance', value)
       .pipe(map((response) => response.data));
+  }
+  updateMaintenance(id: string, value: unknown) {
+    return this.http
+      .put<AuthApiResponse<MaintenanceRecord>>(this.url + '/maintenance/' + id, value)
+      .pipe(map((response) => response.data));
+  }
+  deleteMaintenance(id: string) {
+    return this.http.delete<AuthApiResponse<null>>(this.url + '/maintenance/' + id);
   }
   completeMaintenance(id: string, value: unknown) {
     return this.http
@@ -78,10 +89,21 @@ export class FleetIntelligenceService {
   geofences() {
     return this.get<FleetGeofence[]>('/geofences');
   }
+  geofenceById(id: string) {
+    return this.get<FleetGeofence>('/geofences/' + id);
+  }
   createGeofence(value: unknown) {
     return this.http
       .post<AuthApiResponse<FleetGeofence>>(this.url + '/geofences', value)
       .pipe(map((response) => response.data));
+  }
+  updateGeofence(id: string, value: unknown) {
+    return this.http
+      .put<AuthApiResponse<FleetGeofence>>(this.url + '/geofences/' + id, value)
+      .pipe(map((response) => response.data));
+  }
+  deleteGeofence(id: string) {
+    return this.http.delete<AuthApiResponse<null>>(this.url + '/geofences/' + id);
   }
   forecasts() {
     return this.get<FleetForecast[]>('/forecasts');

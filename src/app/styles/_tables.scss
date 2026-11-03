@@ -122,6 +122,16 @@ tbody tr:hover {
   align-items: center;
   gap: 12px;
 }
+.vehicle-registration {
+  display: inline-block;
+  max-width: 190px;
+  overflow: hidden;
+  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
 .vehicle-thumbnail {
   width: 54px;
   height: 38px;

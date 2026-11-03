@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { CurrencyPipe, DatePipe, DOCUMENT, NgClass } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,12 +9,13 @@ import {
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize, forkJoin, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of, type Observable } from 'rxjs';
 import type { Vehicle } from '../../core/models/api.models';
 import { FeedbackService } from '../../core/services/feedback.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { VehicleService } from '../../core/services/vehicle.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { AlertListComponent } from './components/alert-list/alert-list.component';
 import { AnalyticsPanelComponent } from './components/analytics-panel/analytics-panel.component';
 import { GeofenceListComponent } from './components/geofence-list/geofence-list.component';
@@ -37,9 +38,18 @@ import type {
   VehicleHealth,
 } from './fleet-intelligence.models';
 import { FleetIntelligenceService } from './fleet-intelligence.service';
+import { FleetMapComponent } from './fleet-map.component';
+import { FleetDatePipe } from './fleet-date.pipe';
+import { FleetStatusClassPipe } from './fleet-status-class.pipe';
+import { FleetStatusPipe } from './fleet-status.pipe';
 
 type FleetSection =
   'overview' | 'maintenance' | 'health' | 'tracking' | 'geofences' | 'alerts' | 'analytics';
+
+type FleetConfirmation =
+  | { kind: 'deleteGeofence'; geofence: FleetGeofence }
+  | { kind: 'deleteMaintenance'; record: MaintenanceRecord }
+  | { kind: 'acknowledgeAlert'; alert: FleetAlert };
 
 @Component({
   selector: 'app-fleet-intelligence',
@@ -56,6 +66,14 @@ type FleetSection =
     FleetOverviewComponent,
     SimulationDialogComponent,
     TrackingPanelComponent,
+    ModalComponent,
+    FleetMapComponent,
+    FleetDatePipe,
+    FleetStatusPipe,
+    FleetStatusClassPipe,
+    NgClass,
+    CurrencyPipe,
+    DatePipe,
   ],
   templateUrl: './fleet-intelligence.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,6 +104,11 @@ export class FleetIntelligenceComponent {
   readonly maintenanceOpen = signal(false);
   readonly simulationOpen = signal(false);
   readonly geofenceOpen = signal(false);
+  readonly editingMaintenance = signal<MaintenanceRecord | null>(null);
+  readonly editingGeofence = signal<FleetGeofence | null>(null);
+  readonly maintenanceDetails = signal<MaintenanceRecord | null>(null);
+  readonly geofenceDetails = signal<FleetGeofence | null>(null);
+  readonly confirmation = signal<FleetConfirmation | null>(null);
   readonly selectedVehicle = computed(() =>
     this.vehicles().find(
       (vehicle) => String(vehicle.carId) === this.maintenanceForm.controls.vehicleId.value,
@@ -94,11 +117,13 @@ export class FleetIntelligenceComponent {
   readonly maintenanceForm = this.fb.nonNullable.group({
     vehicleId: ['', Validators.required],
     maintenanceType: ['', Validators.required],
-    description: ['', [Validators.required, Validators.maxLength(1000)]],
+    description: ['', [Validators.required, Validators.maxLength(500)]],
     scheduledDate: ['', Validators.required],
     odometerReading: [0, [Validators.required, Validators.min(0)]],
     estimatedCost: [0, Validators.min(0)],
     serviceProvider: [''],
+    status: ['SCHEDULED', Validators.required],
+    notes: ['', Validators.maxLength(1000)],
   });
   readonly simulationForm = this.fb.nonNullable.group({
     vehicleId: ['', Validators.required],
@@ -108,10 +133,11 @@ export class FleetIntelligenceComponent {
   });
   readonly geofenceForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
-    description: [''],
+    description: ['', Validators.maxLength(500)],
     centerLatitude: [20.5937, [Validators.required, Validators.min(-90), Validators.max(90)]],
     centerLongitude: [78.9629, [Validators.required, Validators.min(-180), Validators.max(180)]],
     radiusMeters: [500, [Validators.required, Validators.min(50), Validators.max(100000)]],
+    status: ['ACTIVE', Validators.required],
   });
   readonly sections: {
     key: FleetSection;
@@ -142,7 +168,9 @@ export class FleetIntelligenceComponent {
     const requests = {
       capabilities: this.api.capabilities(),
       vehicles:
-        section === 'maintenance' || section === 'tracking' ? this.vehicleApi.list() : of([]),
+        section === 'maintenance' || section === 'tracking'
+          ? this.vehicleApi.list().pipe(catchError(() => of([] as Vehicle[])))
+          : of([]),
       data:
         section === 'maintenance'
           ? this.api.maintenance()
@@ -187,37 +215,90 @@ export class FleetIntelligenceComponent {
 
   saveMaintenance(): void {
     if (this.maintenanceForm.invalid || this.saving()) return;
-    const vehicle = this.selectedVehicle();
-    if (!vehicle) return;
     const value = this.maintenanceForm.getRawValue();
+    const editing = this.editingMaintenance();
+    const vehicle = this.selectedVehicle();
+    if (!editing && !vehicle) return;
+    const request = {
+      maintenanceType: value.maintenanceType,
+      description: value.description,
+      scheduledDate: `${value.scheduledDate}T00:00:00.000Z`,
+      odometerReading: value.odometerReading,
+      estimatedCost: value.estimatedCost || null,
+      serviceProvider: value.serviceProvider || null,
+      status: value.status,
+      notes: value.notes || null,
+    };
     this.saving.set(true);
-    this.api
-      .createMaintenance({
-        vehicleRef: `${vehicle.vehicleType ?? 'CAR'}:${Math.abs(vehicle.carId)}`,
-        vehicleType: vehicle.vehicleType ?? 'CAR',
-        registrationNumber: vehicle.regNo,
-        maintenanceType: value.maintenanceType,
-        description: value.description,
-        scheduledDate: value.scheduledDate,
-        odometerReading: value.odometerReading,
-        estimatedCost: value.estimatedCost || null,
-        serviceProvider: value.serviceProvider || null,
-        status: 'SCHEDULED',
-      })
-      .pipe(finalize(() => this.saving.set(false)))
-      .subscribe({
-        next: () => {
-          this.feedback.toast('Maintenance record created successfully.');
-          this.maintenanceOpen.set(false);
-          this.maintenanceForm.reset();
-          this.load();
-        },
-        error: () =>
-          this.feedback.toast(
-            'Unable to create the maintenance record. Please try again.',
-            'error',
-          ),
+    const operation = editing
+      ? this.api.updateMaintenance(editing.id, request)
+      : this.api.createMaintenance({
+          ...request,
+          vehicleRef: `${vehicle!.vehicleType ?? 'CAR'}:${Math.abs(vehicle!.carId)}`,
+          vehicleType: vehicle!.vehicleType ?? 'CAR',
+          registrationNumber: vehicle!.regNo,
+        });
+    operation.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.feedback.toast(
+          editing
+            ? 'Maintenance record updated successfully.'
+            : 'Maintenance record created successfully.',
+        );
+        this.maintenanceOpen.set(false);
+        this.editingMaintenance.set(null);
+        this.resetMaintenanceForm();
+        this.load();
+      },
+      error: () =>
+        this.feedback.toast(
+          editing
+            ? 'Unable to update the maintenance record. Please try again.'
+            : 'Unable to create the maintenance record. Please try again.',
+          'error',
+        ),
+    });
+  }
+
+  openMaintenanceCreate(): void {
+    this.editingMaintenance.set(null);
+    this.resetMaintenanceForm();
+    this.maintenanceOpen.set(true);
+  }
+
+  handleMaintenanceAction(event: { action: string; record: MaintenanceRecord }): void {
+    if (event.action === 'view') {
+      this.api.maintenanceById(event.record.id).subscribe({
+        next: (record) => this.maintenanceDetails.set(record),
+        error: () => this.feedback.toast('Unable to load maintenance details.', 'error'),
       });
+      return;
+    }
+    if (event.action === 'edit') {
+      if (event.record.status === 'COMPLETED') {
+        this.feedback.toast(
+          'Completed maintenance records are retained as read-only history.',
+          'info',
+        );
+        return;
+      }
+      this.editingMaintenance.set(event.record);
+      this.maintenanceForm.reset({
+        vehicleId: event.record.vehicleRef,
+        maintenanceType: event.record.maintenanceType,
+        description: event.record.description,
+        scheduledDate: event.record.scheduledDate.slice(0, 10),
+        odometerReading: event.record.odometerReading ?? 0,
+        estimatedCost: event.record.estimatedCost ?? 0,
+        serviceProvider: event.record.serviceProvider ?? '',
+        status: event.record.status,
+        notes: event.record.notes ?? '',
+      });
+      this.maintenanceOpen.set(true);
+      return;
+    }
+    if (event.action === 'delete')
+      this.confirmation.set({ kind: 'deleteMaintenance', record: event.record });
   }
 
   sendSimulation(): void {
@@ -247,34 +328,127 @@ export class FleetIntelligenceComponent {
       });
   }
 
-  acknowledge(alert: FleetAlert): void {
-    this.api.acknowledge(alert.id).subscribe({
-      next: () => this.load(),
-      error: () => this.feedback.toast('Unable to acknowledge the alert.', 'error'),
-    });
+  requestAcknowledge(alert: FleetAlert): void {
+    if (alert.status !== 'OPEN') {
+      this.feedback.toast('This alert has already changed status. Refresh the list.', 'warning');
+      return;
+    }
+    this.confirmation.set({ kind: 'acknowledgeAlert', alert });
   }
 
   saveGeofence(): void {
     if (this.geofenceForm.invalid || this.saving()) return;
     this.saving.set(true);
-    this.api
-      .createGeofence({ ...this.geofenceForm.getRawValue(), status: 'ACTIVE' })
-      .pipe(finalize(() => this.saving.set(false)))
-      .subscribe({
-        next: () => {
-          this.feedback.toast('Geofence created successfully.');
-          this.geofenceOpen.set(false);
-          this.geofenceForm.reset({
-            centerLatitude: 20.5937,
-            centerLongitude: 78.9629,
-            radiusMeters: 500,
-            name: '',
-            description: '',
-          });
-          this.load();
-        },
-        error: () => this.feedback.toast('Unable to create the geofence.', 'error'),
+    const editing = this.editingGeofence();
+    const operation = editing
+      ? this.api.updateGeofence(editing.id, this.geofenceForm.getRawValue())
+      : this.api.createGeofence(this.geofenceForm.getRawValue());
+    operation.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.feedback.toast(
+          editing ? 'Geofence updated successfully.' : 'Geofence created successfully.',
+        );
+        this.geofenceOpen.set(false);
+        this.editingGeofence.set(null);
+        this.resetGeofenceForm();
+        this.load();
+      },
+      error: () =>
+        this.feedback.toast(
+          editing ? 'Unable to update the geofence.' : 'Unable to create the geofence.',
+          'error',
+        ),
+    });
+  }
+
+  openGeofenceCreate(): void {
+    this.editingGeofence.set(null);
+    this.resetGeofenceForm();
+    this.geofenceOpen.set(true);
+  }
+
+  handleGeofenceAction(event: { action: string; geofence: FleetGeofence }): void {
+    if (event.action === 'view') {
+      this.api.geofenceById(event.geofence.id).subscribe({
+        next: (geofence) => this.geofenceDetails.set(geofence),
+        error: () => this.feedback.toast('Unable to load geofence details.', 'error'),
       });
+      return;
+    }
+    if (event.action === 'edit') {
+      this.editingGeofence.set(event.geofence);
+      this.geofenceForm.reset({
+        name: event.geofence.name,
+        description: event.geofence.description ?? '',
+        centerLatitude: event.geofence.centerLatitude,
+        centerLongitude: event.geofence.centerLongitude,
+        radiusMeters: event.geofence.radiusMeters,
+        status: event.geofence.status,
+      });
+      this.geofenceOpen.set(true);
+      return;
+    }
+    if (event.action === 'delete')
+      this.confirmation.set({ kind: 'deleteGeofence', geofence: event.geofence });
+  }
+
+  confirmFleetAction(): void {
+    const confirmation = this.confirmation();
+    if (!confirmation || this.saving()) return;
+    this.saving.set(true);
+    let operation: Observable<unknown>;
+    if (confirmation.kind === 'deleteGeofence')
+      operation = this.api.deleteGeofence(confirmation.geofence.id);
+    else if (confirmation.kind === 'deleteMaintenance')
+      operation = this.api.deleteMaintenance(confirmation.record.id);
+    else operation = this.api.acknowledge(confirmation.alert.id);
+    operation.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        const message =
+          confirmation.kind === 'deleteGeofence'
+            ? 'Geofence deleted successfully.'
+            : confirmation.kind === 'deleteMaintenance'
+              ? 'Maintenance record deleted successfully.'
+              : 'Fleet alert acknowledged successfully.';
+        this.feedback.toast(message);
+        this.confirmation.set(null);
+        this.load();
+      },
+      error: () => {
+        const message =
+          confirmation.kind === 'deleteGeofence'
+            ? 'Unable to delete the geofence.'
+            : confirmation.kind === 'deleteMaintenance'
+              ? 'Unable to delete the maintenance record.'
+              : 'Unable to acknowledge the alert. Refresh and try again.';
+        this.feedback.toast(message, 'error');
+      },
+    });
+  }
+
+  private resetMaintenanceForm(): void {
+    this.maintenanceForm.reset({
+      vehicleId: '',
+      maintenanceType: '',
+      description: '',
+      scheduledDate: '',
+      odometerReading: 0,
+      estimatedCost: 0,
+      serviceProvider: '',
+      status: 'SCHEDULED',
+      notes: '',
+    });
+  }
+
+  private resetGeofenceForm(): void {
+    this.geofenceForm.reset({
+      centerLatitude: 20.5937,
+      centerLongitude: 78.9629,
+      radiusMeters: 500,
+      name: '',
+      description: '',
+      status: 'ACTIVE',
+    });
   }
 
   closePanels(): void {
@@ -282,5 +456,10 @@ export class FleetIntelligenceComponent {
     this.maintenanceOpen.set(false);
     this.simulationOpen.set(false);
     this.geofenceOpen.set(false);
+    this.editingMaintenance.set(null);
+    this.editingGeofence.set(null);
+    this.maintenanceDetails.set(null);
+    this.geofenceDetails.set(null);
+    this.confirmation.set(null);
   }
 }

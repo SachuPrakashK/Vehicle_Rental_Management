@@ -16,6 +16,14 @@ export async function overview(request: Request, response: Response) {
 export async function maintenance(_request: Request, response: Response) {
   success(response, 200, 'Maintenance records loaded.', await fleet.maintenance());
 }
+export async function maintenanceById(request: Request, response: Response) {
+  success(
+    response,
+    200,
+    'Maintenance record loaded.',
+    await fleet.maintenanceById(String(request.params['id'])),
+  );
+}
 export async function createMaintenance(request: Request, response: Response) {
   success(
     response,
@@ -23,6 +31,18 @@ export async function createMaintenance(request: Request, response: Response) {
     'Maintenance scheduled.',
     await fleet.createMaintenance(request.body, request.user!.id),
   );
+}
+export async function updateMaintenance(request: Request, response: Response) {
+  success(
+    response,
+    200,
+    'Maintenance record updated.',
+    await fleet.updateMaintenance(String(request.params['id']), request.body),
+  );
+}
+export async function deleteMaintenance(request: Request, response: Response) {
+  await fleet.deleteMaintenance(String(request.params['id']));
+  success(response, 200, 'Maintenance record deleted.', null);
 }
 export async function completeMaintenance(request: Request, response: Response) {
   success(
@@ -103,6 +123,14 @@ export async function resolve(request: Request, response: Response) {
 export async function geofences(_request: Request, response: Response) {
   success(response, 200, 'Geofences loaded.', await fleet.geofences());
 }
+export async function geofenceById(request: Request, response: Response) {
+  success(
+    response,
+    200,
+    'Geofence loaded.',
+    await fleet.geofenceById(String(request.params['id'])),
+  );
+}
 export async function createGeofence(request: Request, response: Response) {
   success(
     response,
@@ -110,6 +138,18 @@ export async function createGeofence(request: Request, response: Response) {
     'Geofence created.',
     await fleet.createGeofence(request.body, request.user!.id),
   );
+}
+export async function updateGeofence(request: Request, response: Response) {
+  success(
+    response,
+    200,
+    'Geofence updated.',
+    await fleet.updateGeofence(String(request.params['id']), request.body, request.user!.id),
+  );
+}
+export async function deleteGeofence(request: Request, response: Response) {
+  await fleet.deleteGeofence(String(request.params['id']));
+  success(response, 200, 'Geofence deleted.', null);
 }
 export async function analytics(_request: Request, response: Response) {
   success(response, 200, 'Fleet analytics loaded.', await fleet.analytics());

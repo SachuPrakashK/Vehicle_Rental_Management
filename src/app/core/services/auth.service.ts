@@ -59,7 +59,9 @@ export class AuthService {
     return this.auth<null>('verify-reset-token', { token });
   }
   resetPassword(token: string, password: string, confirmPassword: string) {
-    return this.auth<null>('reset-password', { token, password, confirmPassword });
+    return this.auth<null>('reset-password', { token, password, confirmPassword }).pipe(
+      tap(() => this.store.clear()),
+    );
   }
   changePassword(currentPassword: string, newPassword: string, confirmPassword: string) {
     return this.auth<null>('change-password', {

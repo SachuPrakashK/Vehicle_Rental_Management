@@ -10,7 +10,7 @@
       <div class="fleet-health-score">{{ item.healthScore }}</div>
       <div>
         <h3>{{ item.registrationNumber }}</h3>
-        <span class="status">{{ item.status }}</span>
+        <span class="fleet-status" [ngClass]="item.status | fleetStatusClass">{{ item.status | fleetStatus }}</span>
         <p>
           {{ item.factors.overdueMaintenance }} overdue maintenance item(s),
           {{ item.factors.openInspectionDefects }} open inspection defect(s)

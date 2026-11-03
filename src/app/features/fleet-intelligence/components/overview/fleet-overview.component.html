@@ -136,16 +136,9 @@
               <td>{{ item.remainingKm ?? '—' }}</td>
               <td>
                 <span
-                  class="status"
-                  [class.warning]="item.status === 'DUE_SOON'"
-                  [class.error]="item.status === 'OVERDUE'"
-                  >{{
-                    item.status === 'DUE_SOON'
-                      ? 'Due soon'
-                      : item.status === 'OVERDUE'
-                        ? 'Overdue'
-                        : 'Planned'
-                  }}</span
+                  class="fleet-status"
+                  [ngClass]="item.status | fleetStatusClass"
+                  >{{ item.status | fleetStatus }}</span
                 >
               </td>
               <td>
