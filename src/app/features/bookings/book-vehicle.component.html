@@ -73,17 +73,25 @@
             </div>
             <div class="field">
               <label for="booking-date">Booking date <span class="required">*</span></label
-              ><input id="booking-date" type="date" formControlName="bookingDate" /><app-field-error
-                [control]="form.controls.bookingDate"
-              />
+              ><app-date-picker
+                inputId="booking-date"
+                formControlName="bookingDate"
+                ariaLabel="Select booking date"
+                [required]="true"
+                [clearable]="false"
+              /><app-field-error [control]="form.controls.bookingDate" />
             </div>
             <div class="field">
               <label for="return-date">Planned return date <span class="required">*</span></label
-              ><input
-                id="return-date"
-                type="date"
+              ><app-date-picker
+                inputId="return-date"
                 formControlName="returnDate"
+                ariaLabel="Select planned return date"
+                [required]="true"
+                [clearable]="false"
                 [min]="form.controls.bookingDate.value"
+                [rangeStart]="form.controls.bookingDate.value"
+                [rangeEnd]="form.controls.returnDate.value"
               /><app-field-error [control]="form.controls.returnDate" />
             </div>
             @if (form.hasError('dateRange') && form.controls.returnDate.touched) {

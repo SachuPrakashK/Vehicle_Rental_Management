@@ -317,23 +317,5 @@
 }
 .date-filter-control {
   position: relative;
-}
-.date-filter-display {
-  height: var(--control-height);
   min-width: 154px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--surface);
-  color: var(--text-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  font-size: 11px;
-}
-.date-filter-display app-icon {
-  width: 17px;
-  height: 17px;
-  color: var(--secondary);
 }

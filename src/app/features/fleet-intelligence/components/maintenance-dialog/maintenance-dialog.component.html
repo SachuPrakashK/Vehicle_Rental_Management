@@ -57,7 +57,11 @@
         </label>
         <label class="field"
           ><span>Scheduled date <b>*</b></span
-          ><input type="date" formControlName="scheduledDate" />
+          ><app-date-picker
+            formControlName="scheduledDate"
+            ariaLabel="Select scheduled maintenance date"
+            [required]="true"
+          />
           @if (form().get('scheduledDate')?.touched && form().get('scheduledDate')?.invalid) {
             <small class="field-error">Select a scheduled date.</small>
           }

@@ -1,0 +1,194 @@
+.date-picker-control {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.date-picker-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 10px 42px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+}
+.date-picker-input:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+.date-picker-input:focus-visible {
+  outline: 0;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+app-date-picker.ng-invalid.ng-touched .date-picker-input {
+  border-color: var(--error);
+}
+.date-picker-input .placeholder {
+  color: var(--muted);
+}
+.date-picker-input app-icon {
+  position: absolute;
+  right: 12px;
+  color: var(--primary);
+  pointer-events: none;
+}
+.date-picker-clear {
+  position: absolute;
+  top: 50%;
+  right: 38px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  transform: translateY(-50%);
+}
+.date-picker-clear:hover,
+.date-picker-clear:focus-visible {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.date-picker-control.disabled {
+  opacity: 0.65;
+}
+.date-picker-input:disabled {
+  cursor: not-allowed;
+  background: var(--background);
+}
+.calendar-popup {
+  position: fixed;
+  z-index: 1300;
+  width: min(320px, calc(100vw - 24px));
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+.calendar-heading {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  text-align: center;
+}
+.calendar-heading .icon-button:first-child app-icon {
+  transform: rotate(90deg);
+}
+.calendar-heading .next app-icon {
+  transform: rotate(-90deg);
+}
+.calendar-heading strong {
+  font-size: 13px;
+}
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.calendar-weekdays {
+  margin-bottom: var(--space-2);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+}
+.calendar-weekdays span {
+  padding: 5px 0;
+}
+.calendar-grid button {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+.calendar-grid button:hover:not(:disabled),
+.calendar-grid button:focus-visible {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.calendar-grid button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+.calendar-grid button.outside {
+  color: var(--muted);
+  opacity: 0.58;
+}
+.calendar-grid button.today::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--secondary);
+  transform: translateX(-50%);
+}
+.calendar-grid button.in-range {
+  border-radius: 0;
+  background: var(--secondary-light);
+  color: var(--text-primary);
+}
+.calendar-grid button.selected,
+.calendar-grid button.range-start,
+.calendar-grid button.range-end {
+  border-radius: 7px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+.calendar-grid button:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  text-decoration: line-through;
+  opacity: 0.42;
+}
+.calendar-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 480px) {
+  .calendar-popup {
+    top: auto !important;
+    right: 8px;
+    bottom: 8px;
+    left: 8px !important;
+    width: auto;
+    padding: var(--space-4);
+    border-radius: 14px;
+  }
+  .calendar-grid button {
+    min-height: 40px;
+    aspect-ratio: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-popup {
+    scroll-behavior: auto;
+  }
+}

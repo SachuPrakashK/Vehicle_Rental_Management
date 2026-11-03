@@ -74,6 +74,17 @@ export class VehiclesComponent {
   readonly imageFile = signal<File | null>(null);
   readonly imagePreview = signal<string | null>(null);
   readonly deleting = signal<number | null>(null);
+  readonly years = computed(() => {
+    const maximumYear = new Date().getFullYear() + 1;
+    return [
+      ...new Set(
+        this.list
+          .records()
+          .map((vehicle) => Number(vehicle.year))
+          .filter((year) => Number.isInteger(year) && year >= 1900 && year <= maximumYear),
+      ),
+    ].sort((a, b) => b - a);
+  });
   readonly rowActions = computed<ActionMenuItem[]>(() => [
     { id: 'view', label: 'View', icon: 'view' },
     ...(this.permissions.has('vehicles.edit')
@@ -144,9 +155,6 @@ export class VehiclesComponent {
           },
     );
     this.open.set(true);
-  }
-  years(): number[] {
-    return [...new Set(this.list.records().map((vehicle) => vehicle.year))].sort((a, b) => b - a);
   }
   hasUnsavedChanges(): boolean {
     return this.busy() || (this.open() && !this.viewing() && this.form.dirty);
