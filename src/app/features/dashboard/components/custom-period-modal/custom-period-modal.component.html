@@ -8,12 +8,28 @@
   <form class="modal-form" [formGroup]="form" novalidate>
     <div class="field">
       <label for="custom-period-from">From date <span class="required">*</span></label>
-      <input id="custom-period-from" type="date" formControlName="from" />
+      <app-date-picker
+        inputId="custom-period-from"
+        formControlName="from"
+        ariaLabel="Select custom period start date"
+        [required]="true"
+        [max]="form.controls.to.value"
+        [rangeStart]="form.controls.from.value"
+        [rangeEnd]="form.controls.to.value"
+      />
       <app-field-error [control]="form.controls.from" />
     </div>
     <div class="field">
       <label for="custom-period-to">To date <span class="required">*</span></label>
-      <input id="custom-period-to" type="date" formControlName="to" />
+      <app-date-picker
+        inputId="custom-period-to"
+        formControlName="to"
+        ariaLabel="Select custom period end date"
+        [required]="true"
+        [min]="form.controls.from.value"
+        [rangeStart]="form.controls.from.value"
+        [rangeEnd]="form.controls.to.value"
+      />
       <app-field-error [control]="form.controls.to" />
     </div>
     @if (form.hasError('dateRange') && form.touched) {

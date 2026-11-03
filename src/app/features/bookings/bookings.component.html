@@ -12,23 +12,10 @@
     />
     <div class="toolbar-filters">
       <div class="date-filter-control">
-        <button
-          type="button"
-          class="date-filter-display"
-          aria-label="Filter booking date"
-          (click)="openDatePicker(date)"
-        >
-          <span>{{ dateFilterLabel() }}</span>
-          <app-icon name="calendar" />
-        </button>
-        <input
-          #date
-          class="sr-only"
-          type="date"
-          aria-label="Filter booking date"
-          placeholder="dd-mm-yyyy"
+        <app-date-picker
+          ariaLabel="Filter booking date"
           [value]="dateFilter()"
-          (input)="dateFilter.set(date.value); list.page.set(1)"
+          (valueChange)="dateFilter.set($event); list.page.set(1)"
         />
       </div>
     </div>

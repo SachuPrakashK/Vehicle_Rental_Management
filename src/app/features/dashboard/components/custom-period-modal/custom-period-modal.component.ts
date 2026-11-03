@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ModalComponent } from '../../../../shared/components/modal/modal.component';
 import { FieldErrorComponent } from '../../../../shared/components/field-error/field-error.component';
 import { customPeriodValidator } from '../../../../shared/utils/validators';
+import { DatePickerComponent } from '../../../../shared/components/date-picker/date-picker.component';
 
 export interface CustomPeriodRange {
   from: string;
@@ -11,7 +12,7 @@ export interface CustomPeriodRange {
 
 @Component({
   selector: 'app-custom-period-modal',
-  imports: [ReactiveFormsModule, ModalComponent, FieldErrorComponent],
+  imports: [ReactiveFormsModule, ModalComponent, FieldErrorComponent, DatePickerComponent],
   templateUrl: './custom-period-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -19,6 +19,7 @@ import {
 } from '../../shared/components/action-menu/action-menu.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
 import { PermissionService } from '../../core/services/permission.service';
+import { DatePickerComponent } from '../../shared/components/date-picker/date-picker.component';
 @Component({
   selector: 'app-bookings',
   imports: [
@@ -32,6 +33,7 @@ import { PermissionService } from '../../core/services/permission.service';
     DrawerComponent,
     ActionMenuComponent,
     SearchComponent,
+    DatePickerComponent,
   ],
   templateUrl: './bookings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -132,15 +134,5 @@ export class BookingsComponent {
   bookingAction(action: string, booking: Booking): void {
     if (action === 'view') void this.router.navigate(['/bookings', booking.bookingId]);
     if (action === 'delete') void this.remove(booking);
-  }
-  dateFilterLabel(): string {
-    const value = this.dateFilter();
-    if (!value) return 'dd-mm-yyyy';
-    const [year, month, day] = value.split('-');
-    return `${day}-${month}-${year}`;
-  }
-  openDatePicker(input: HTMLInputElement): void {
-    if (typeof input.showPicker === 'function') input.showPicker();
-    else input.click();
   }
 }

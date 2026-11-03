@@ -26,6 +26,7 @@ import { IconComponent } from '../../shared/icons/icon.component';
 import { CustomerFormComponent } from '../customers/customer-form.component';
 import { environment } from '../../../environments/environment';
 import { SearchComponent } from '../../shared/components/search/search.component';
+import { DatePickerComponent } from '../../shared/components/date-picker/date-picker.component';
 @Component({
   selector: 'app-book-vehicle',
   imports: [
@@ -37,6 +38,7 @@ import { SearchComponent } from '../../shared/components/search/search.component
     IconComponent,
     CustomerFormComponent,
     SearchComponent,
+    DatePickerComponent,
   ],
   templateUrl: './book-vehicle.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

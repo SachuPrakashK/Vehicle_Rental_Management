@@ -1,0 +1,79 @@
+<div class="date-picker-control" [class.disabled]="disabledState()">
+  <button
+    class="date-picker-input"
+    [id]="inputId()"
+    type="button"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-expanded]="open()"
+    aria-haspopup="dialog"
+    [disabled]="disabledState()"
+    (click)="toggle()"
+  >
+    <span [class.placeholder]="!displayValue()">{{ displayValue() || placeholder() }}</span
+    ><app-icon name="calendar"></app-icon>
+  </button>
+  @if (clearable() && selected() && !disabledState()) {
+    <button class="date-picker-clear" type="button" aria-label="Clear date" (click)="clear($event)">
+      <app-icon name="close"></app-icon>
+    </button>
+  }
+</div>
+@if (open()) {
+  <section
+    class="calendar-popup"
+    role="dialog"
+    aria-modal="false"
+    aria-label="Choose a date"
+    [style.top.px]="popupTop()"
+    [style.left.px]="popupLeft()"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="calendar-heading">
+      <button
+        type="button"
+        class="icon-button"
+        aria-label="Previous month"
+        (click)="previousMonth()"
+      >
+        <app-icon name="chevron"></app-icon></button
+      ><strong aria-live="polite">{{ monthLabel() }}</strong
+      ><button type="button" class="icon-button next" aria-label="Next month" (click)="nextMonth()">
+        <app-icon name="chevron"></app-icon>
+      </button>
+    </div>
+    <div class="calendar-weekdays" aria-hidden="true">
+      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span
+      ><span>Sa</span>
+    </div>
+    <div class="calendar-grid" role="grid">
+      @for (day of days(); track day.value) {
+        <button
+          type="button"
+          role="gridcell"
+          [attr.data-date]="day.value"
+          [attr.aria-label]="day.value"
+          [attr.aria-selected]="selected() === day.value"
+          [disabled]="day.disabled"
+          [class.outside]="!day.currentMonth"
+          [class.today]="day.today"
+          [class.selected]="selected() === day.value"
+          [class.in-range]="isInRange(day.value)"
+          [class.range-start]="rangeStart() === day.value"
+          [class.range-end]="rangeEnd() === day.value"
+          (click)="select(day)"
+          (keydown)="dayKeydown($event, day)"
+        >
+          {{ day.day }}
+        </button>
+      }
+    </div>
+    <div class="calendar-footer">
+      <button type="button" class="button secondary small" (click)="close(true)">Cancel</button>
+      @if (clearable() && selected()) {
+        <button type="button" class="button secondary small" (click)="clear($event); close(true)">
+          Clear
+        </button>
+      }
+    </div>
+  </section>
+}
