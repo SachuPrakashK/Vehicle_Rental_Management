@@ -227,6 +227,52 @@
   min-height: 44px;
   cursor: pointer;
 }
+
+.field-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.role-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.role-selection-option {
+  align-items: flex-start;
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.role-selection-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: var(--pastel-primary);
+}
+
+.role-selection-option span,
+.role-selection-option strong,
+.role-selection-option small {
+  display: block;
+  min-width: 0;
+}
+
+.role-selection-option small {
+  margin-top: var(--space-1);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 480px) {
+  .role-selection-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .checkbox-label input {
   width: 18px;
   height: 18px;

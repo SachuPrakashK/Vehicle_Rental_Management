@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { AdminUserService } from '../../core/services/admin-user.service';
@@ -20,6 +20,7 @@ import {
 import { SearchComponent } from '../../shared/components/search/search.component';
 import { RbacService } from '../../core/services/rbac.service';
 import type { RbacRole } from '../../core/models/rbac.models';
+import { PermissionService } from '../../core/services/permission.service';
 @Component({
   selector: 'app-admin-users',
   imports: [
@@ -41,6 +42,7 @@ export class AdminUsersComponent {
   private readonly feedback = inject(FeedbackService);
   private readonly fb = inject(FormBuilder);
   private readonly rbac = inject(RbacService);
+  readonly permissions = inject(PermissionService);
   readonly list = new ListState(
     () => this.service.list(),
     (user, query) =>
@@ -57,19 +59,18 @@ export class AdminUsersComponent {
   readonly availableRoles = signal<RbacRole[]>([]);
   readonly roleDrawerOpen = signal(false);
   readonly assignedRoleIds = signal<Set<string>>(new Set());
-  readonly rowActions: ActionMenuItem[] = [
-    { id: 'view', label: 'View', icon: 'view' },
-    { id: 'edit', label: 'Edit', icon: 'edit' },
-    { id: 'roles', label: 'Assign roles', icon: 'shield' },
-    { id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
-  ];
+  readonly savedRoleIds = signal<Set<string>>(new Set());
+  readonly rolesDirty = computed(() => {
+    const current = this.assignedRoleIds();
+    const saved = this.savedRoleIds();
+    return current.size !== saved.size || [...current].some((id) => !saved.has(id));
+  });
   readonly form = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, nonBlank, Validators.maxLength(80)]],
     lastName: ['', [Validators.required, nonBlank, Validators.maxLength(80)]],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', phoneValidator],
     password: [''],
-    role: this.fb.nonNullable.control<AdminUser['role']>('STAFF'),
     isActive: [true],
   });
   constructor() {
@@ -80,7 +81,9 @@ export class AdminUsersComponent {
     try {
       const roles = await firstValueFrom(this.rbac.roles());
       this.availableRoles.set(roles.filter((role) => role.isActive && role.code !== 'SUPER_ADMIN'));
-      this.assignedRoleIds.set(new Set((user.roles ?? []).map((role) => role.id)));
+      const assigned = new Set((user.roles ?? []).map((role) => role.id));
+      this.assignedRoleIds.set(assigned);
+      this.savedRoleIds.set(new Set(assigned));
       this.roleDrawerOpen.set(true);
     } catch (error) {
       showMutationError(this.feedback, error);
@@ -97,6 +100,7 @@ export class AdminUsersComponent {
     this.busy.set(true);
     try {
       await firstValueFrom(this.rbac.assignUserRoles(user.id, [...this.assignedRoleIds()]));
+      this.savedRoleIds.set(new Set(this.assignedRoleIds()));
       this.feedback.toast('User roles updated successfully.');
       this.roleDrawerOpen.set(false);
       await this.list.load();
@@ -106,9 +110,27 @@ export class AdminUsersComponent {
       this.busy.set(false);
     }
   }
-  edit(user?: AdminUser, view = false): void {
+  async edit(user?: AdminUser, view = false): Promise<void> {
+    if (!view && this.permissions.has('users.assign_role')) {
+      try {
+        const roles = await firstValueFrom(this.rbac.roles());
+        this.availableRoles.set(
+          roles.filter((role) => role.isActive && role.code !== 'SUPER_ADMIN'),
+        );
+      } catch (error) {
+        showMutationError(this.feedback, error);
+        return;
+      }
+    }
     this.selected.set(user ?? null);
     this.viewing.set(view);
+    const assigned = new Set((user?.roles ?? []).map((role) => role.id));
+    if (!user) {
+      const staff = this.availableRoles().find((role) => role.code === 'STAFF');
+      if (staff) assigned.add(staff.id);
+    }
+    this.assignedRoleIds.set(assigned);
+    this.savedRoleIds.set(new Set(assigned));
     this.form.reset(
       user
         ? {
@@ -117,7 +139,6 @@ export class AdminUsersComponent {
             email: user.email,
             phone: user.phone ?? '',
             password: '',
-            role: user.role,
             isActive: user.isActive,
           }
         : {
@@ -126,7 +147,6 @@ export class AdminUsersComponent {
             email: '',
             phone: '',
             password: '',
-            role: 'STAFF',
             isActive: true,
           },
     );
@@ -135,23 +155,30 @@ export class AdminUsersComponent {
     this.open.set(true);
   }
   hasUnsavedChanges(): boolean {
-    return this.busy() || (this.open() && !this.viewing() && this.form.dirty);
+    return (
+      this.busy() ||
+      (this.open() && !this.viewing() && (this.form.dirty || this.rolesDirty())) ||
+      (this.roleDrawerOpen() && this.rolesDirty())
+    );
   }
   async save(): Promise<void> {
     if (this.busy()) return;
     this.form.markAllAsTouched();
-    if (this.form.invalid) return;
+    if (this.form.invalid || !this.assignedRoleIds().size) return;
     this.busy.set(true);
     try {
       const value = this.form.getRawValue();
+      const selected = this.selected();
       const input = {
         ...value,
         firstName: value.firstName.trim(),
         lastName: value.lastName.trim(),
         email: value.email.trim(),
         phone: value.phone || null,
+        ...(selected?.role === 'SUPER_ADMIN' || !this.permissions.has('users.assign_role')
+          ? {}
+          : { roleIds: [...this.assignedRoleIds()] }),
       };
-      const selected = this.selected();
       await firstValueFrom(
         selected ? this.service.update(selected.id, input) : this.service.create(input),
       );
@@ -188,9 +215,31 @@ export class AdminUsersComponent {
     }
   }
   userAction(action: string, user: AdminUser): void {
-    if (action === 'view') this.edit(user, true);
-    if (action === 'edit') this.edit(user);
+    if (action === 'view') void this.edit(user, true);
+    if (action === 'edit') void this.edit(user);
     if (action === 'roles') void this.assignRoles(user);
     if (action === 'delete') void this.remove(user);
+  }
+
+  userActions(user: AdminUser): ActionMenuItem[] {
+    return [
+      { id: 'view', label: 'View', icon: 'view' },
+      ...(this.permissions.has('users.edit')
+        ? [{ id: 'edit', label: 'Edit', icon: 'edit' } as ActionMenuItem]
+        : []),
+      ...(this.permissions.has('users.assign_role') && user.role !== 'SUPER_ADMIN'
+        ? [{ id: 'roles', label: 'Assign roles', icon: 'shield' } as ActionMenuItem]
+        : []),
+      ...(this.permissions.has('users.deactivate') && user.role !== 'SUPER_ADMIN'
+        ? [
+            {
+              id: 'delete',
+              label: 'Delete',
+              icon: 'delete',
+              destructive: true,
+            } as ActionMenuItem,
+          ]
+        : []),
+    ];
   }
 }

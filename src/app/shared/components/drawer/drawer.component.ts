@@ -10,6 +10,9 @@ import {
 } from '@angular/core';
 import { FeedbackService } from '../../../core/services/feedback.service';
 import { IconComponent } from '../../icons/icon.component';
+
+let drawerSequence = 0;
+
 @Component({
   selector: 'app-drawer',
   imports: [IconComponent],
@@ -17,10 +20,12 @@ import { IconComponent } from '../../icons/icon.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DrawerComponent {
+  readonly titleId = `drawer-title-${++drawerSequence}`;
   readonly title = input.required<string>();
   readonly open = input(false);
   readonly dirty = input(false);
   readonly busy = input(false);
+  readonly size = input<'default' | 'wide'>('default');
   readonly closed = output<void>();
   readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
   private readonly feedback = inject(FeedbackService);

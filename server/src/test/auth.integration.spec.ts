@@ -478,4 +478,61 @@ describe('authentication API', () => {
       audits.body.data.some((entry: { action: string }) => entry.action === 'USER_ROLES_UPDATED'),
     ).toBe(true);
   });
+
+  it('uses the same role assignment rules for create and edit user workflows', async () => {
+    const roles = await request(app)
+      .get('/api/authorization/roles')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200);
+    const staff = roles.body.data.find((role: { code: string }) => role.code === 'STAFF');
+    const admin = roles.body.data.find((role: { code: string }) => role.code === 'ADMIN');
+    const created = await request(app)
+      .post('/api/admin/users')
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({
+        firstName: 'Role',
+        lastName: 'Workflow',
+        email: 'role-workflow@example.com',
+        phone: null,
+        password,
+        roleIds: [staff.id],
+        isActive: true,
+      })
+      .expect(201);
+    expect(created.body.data.roles.map((role: { code: string }) => role.code)).toEqual(['STAFF']);
+    const id = created.body.data.id as string;
+    const updated = await request(app)
+      .put('/api/admin/users/' + id)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({
+        firstName: 'Role',
+        lastName: 'Workflow',
+        email: 'role-workflow@example.com',
+        phone: null,
+        roleIds: [admin.id],
+        isActive: true,
+      })
+      .expect(200);
+    expect(updated.body.data.role).toBe('ADMIN');
+    expect(updated.body.data.roles.map((role: { code: string }) => role.code)).toEqual(['ADMIN']);
+    const profileOnly = await request(app)
+      .put('/api/admin/users/' + id)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({
+        firstName: 'Updated',
+        lastName: 'Workflow',
+        email: 'role-workflow@example.com',
+        phone: null,
+        isActive: true,
+      })
+      .expect(200);
+    expect(profileOnly.body.data.roles.map((role: { code: string }) => role.code)).toEqual([
+      'ADMIN',
+    ]);
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'role-workflow@example.com', password })
+      .expect(200);
+    expect(login.body.data.user.permissions).toContain('vehicles.create');
+  });
 });

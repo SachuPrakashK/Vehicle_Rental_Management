@@ -14,6 +14,10 @@
   overflow: visible;
 }
 
+.drawer.wide {
+  width: min(860px, 100vw);
+}
+
 .drawer[open] {
   display: flex;
   flex-direction: column;

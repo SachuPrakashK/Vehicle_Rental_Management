@@ -18,6 +18,29 @@ test.beforeEach(async ({ page }) => {
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     lastLoginAt: null,
+    roles: [],
+    permissions: [
+      'dashboard.view',
+      'vehicles.view',
+      'vehicles.create',
+      'vehicles.edit',
+      'bookings.view',
+      'bookings.create',
+      'customers.view',
+      'customers.create',
+      'customers.edit',
+      'ledger.view',
+      'users.view',
+      'users.create',
+      'users.edit',
+      'users.deactivate',
+      'users.assign_role',
+      'roles.view',
+      'roles.create',
+      'roles.edit',
+      'roles.delete',
+      'roles.assign_permissions',
+    ],
   };
   await page.route('**/api/auth/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -43,6 +66,16 @@ test.beforeEach(async ({ page }) => {
       await route.fulfill({ json: { success: true, message: 'Success.', data: [] } });
       return;
     }
+    if (path.endsWith('/me/permissions')) {
+      await route.fulfill({
+        json: {
+          success: true,
+          message: 'Permissions loaded.',
+          data: { roles: user.roles ?? [], permissions: user.permissions },
+        },
+      });
+      return;
+    }
     await route.fulfill({
       json: {
         success: true,
@@ -53,6 +86,96 @@ test.beforeEach(async ({ page }) => {
   });
   await page.route('**/api/bikes', async (route) => {
     await route.fulfill({ json: { success: true, message: 'Success.', data: [] } });
+  });
+  const permissions = [
+    {
+      id: 'permission-1',
+      module: 'Dashboard',
+      action: 'View',
+      code: 'dashboard.view',
+      description: 'View the dashboard.',
+    },
+    {
+      id: 'permission-2',
+      module: 'Vehicles',
+      action: 'View',
+      code: 'vehicles.view',
+      description: 'View vehicles.',
+    },
+    {
+      id: 'permission-3',
+      module: 'Vehicles',
+      action: 'Create',
+      code: 'vehicles.create',
+      description: 'Create vehicles.',
+    },
+    {
+      id: 'permission-4',
+      module: 'Vehicles',
+      action: 'Edit',
+      code: 'vehicles.edit',
+      description: 'Edit vehicles.',
+    },
+    {
+      id: 'permission-5',
+      module: 'Bookings',
+      action: 'View',
+      code: 'bookings.view',
+      description: 'View bookings.',
+    },
+    {
+      id: 'permission-6',
+      module: 'Bookings',
+      action: 'Create',
+      code: 'bookings.create',
+      description: 'Create bookings.',
+    },
+  ];
+  const roles = [
+    {
+      id: 'role-admin',
+      name: 'Admin',
+      code: 'ADMIN',
+      description: 'Rental operations administrator.',
+      isSystemRole: true,
+      isActive: true,
+      version: 1,
+      assignedUsers: 2,
+      permissions: [permissions[0], permissions[1], permissions[4]],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    },
+    {
+      id: 'role-super-admin',
+      name: 'Super Admin',
+      code: 'SUPER_ADMIN',
+      description: 'Protected system administration role.',
+      isSystemRole: true,
+      isActive: true,
+      version: 1,
+      assignedUsers: 1,
+      permissions,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    },
+  ];
+  await page.route('**/api/authorization/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (route.request().method() === 'PUT' && path.endsWith('/role-admin/permissions')) {
+      const body = route.request().postDataJSON() as { permissionIds: string[] };
+      roles[0] = {
+        ...roles[0],
+        version: roles[0].version + 1,
+        permissions: permissions.filter((permission) => body.permissionIds.includes(permission.id)),
+      };
+      await route.fulfill({ json: { success: true, message: 'Saved.', data: roles[0] } });
+      return;
+    }
+    if (path === '/api/authorization/permissions') {
+      await route.fulfill({ json: { success: true, message: 'Success.', data: permissions } });
+      return;
+    }
+    await route.fulfill({ json: { success: true, message: 'Success.', data: roles } });
   });
   await page.route(api, async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -301,6 +424,124 @@ test('primary routes do not create page-level horizontal overflow', async ({ pag
     }));
     expect(overflow.page, `${route} overflowed at 320px`).toBeLessThanOrEqual(overflow.viewport);
   }
+});
+
+test('authentication pages keep scrolling inside a hidden-scrollbar form pane', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  const routes = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/forgot-password',
+    '/auth/reset-password?token=' + 'x'.repeat(64),
+  ];
+  const viewports = [
+    { width: 375, height: 667 },
+    { width: 768, height: 600 },
+    { width: 1366, height: 650 },
+  ];
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    for (const route of routes) {
+      await page.goto(route);
+      await expect(page.locator('app-auth-layout')).toBeVisible();
+      const dimensions = await page.evaluate(() => {
+        const pane = document.querySelector<HTMLElement>('.auth-form-side');
+        return {
+          documentHeight: document.documentElement.scrollHeight,
+          viewportHeight: document.documentElement.clientHeight,
+          paneOverflow: pane ? getComputedStyle(pane).overflowY : '',
+          paneScrollbarWidth: pane ? getComputedStyle(pane).scrollbarWidth : '',
+        };
+      });
+      expect(dimensions.documentHeight, `${route} created a page scrollbar`).toBeLessThanOrEqual(
+        dimensions.viewportHeight,
+      );
+      expect(dimensions.paneOverflow).toBe('auto');
+      expect(dimensions.paneScrollbarWidth).toBe('none');
+    }
+  }
+});
+
+test('register form uses two columns when space permits', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/auth/register');
+  const form = page.locator('.auth-register-form');
+  await expect(form).toBeVisible();
+  await expect
+    .poll(() =>
+      form.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+    )
+    .toBe(2);
+  await page.setViewportSize({ width: 768, height: 800 });
+  await expect
+    .poll(() =>
+      form.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+    )
+    .toBe(1);
+});
+
+test('permission editor supports grouped responsive selection and protected roles', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  await signIn(page);
+  await page.goto('/roles-permissions');
+  await expect(page.getByRole('heading', { name: 'Roles & permissions' })).toBeVisible();
+  await page.getByRole('button', { name: 'Permissions' }).first().click();
+  const drawer = page.getByRole('dialog', { name: /Permissions · Admin/ });
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByText('3', { exact: true })).toBeVisible();
+  const globalSelectAll = drawer.locator('.permission-select-all input');
+  await expect(globalSelectAll).toHaveJSProperty('indeterminate', true);
+  const vehicles = drawer.locator('.permission-group').filter({ hasText: 'Vehicles' });
+  await expect(vehicles.locator('.permission-module-all input')).toHaveJSProperty(
+    'indeterminate',
+    true,
+  );
+  const createVehicle = vehicles
+    .locator('.permission-option')
+    .filter({ hasText: 'vehicles.create' });
+  await createVehicle.click();
+  await expect(drawer.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+  await drawer.getByRole('button', { name: 'Save changes' }).click();
+  await expect(drawer).toBeHidden();
+  await page.getByRole('button', { name: 'Permissions' }).first().click();
+  await expect(
+    page
+      .getByRole('dialog', { name: /Permissions · Admin/ })
+      .locator('.permission-option')
+      .filter({ hasText: 'vehicles.create' })
+      .locator('input'),
+  ).toBeChecked();
+  for (const width of [320, 375, 425, 768, 1024, 1280]) {
+    await page.setViewportSize({ width, height: width < 768 ? 720 : 800 });
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        ),
+      )
+      .toBe(true);
+    const dimensions = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      drawerWidth:
+        document.querySelector<HTMLDialogElement>('.drawer.wide')?.getBoundingClientRect().width ??
+        0,
+    }));
+    expect(dimensions.drawerWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+  }
+  await page
+    .getByRole('dialog', { name: /Permissions · Admin/ })
+    .getByRole('button', { name: 'Cancel' })
+    .click();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.getByRole('button', { name: 'Permissions' }).nth(1).click();
+  const protectedDrawer = page.getByRole('dialog', { name: /Permissions · Super Admin/ });
+  await expect(protectedDrawer.getByText(/protected and shown as read-only/)).toBeVisible();
+  await expect(protectedDrawer.locator('.permission-option input').first()).toBeDisabled();
 });
 
 test('mobile navigation opens and reaches customers', async ({ page }, testInfo) => {

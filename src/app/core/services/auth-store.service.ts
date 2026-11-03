@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import type { AuthSession, AuthUser } from '../models/auth.models';
+import type { AuthorizationSnapshot, AuthSession, AuthUser } from '../models/auth.models';
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
   private readonly userState = signal<AuthUser | null>(null);
@@ -16,7 +16,24 @@ export class AuthStore {
     this.isResolved.set(true);
   }
   updateUser(user: AuthUser): void {
-    this.userState.set(user);
+    // Profile APIs return a SafeUser without RBAC fields. Preserve the current
+    // authorization snapshot rather than replacing it with an empty one.
+    const current = this.userState();
+    this.userState.set({
+      ...current,
+      ...user,
+      roles: user.roles ?? current?.roles,
+      permissions: user.permissions ?? current?.permissions,
+    });
+  }
+  updateAuthorization(authorization: AuthorizationSnapshot): void {
+    const current = this.userState();
+    if (!current) return;
+    this.userState.set({
+      ...current,
+      roles: authorization.roles,
+      permissions: authorization.permissions,
+    });
   }
   clear(): void {
     this.userState.set(null);

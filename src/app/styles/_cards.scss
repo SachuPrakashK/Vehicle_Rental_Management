@@ -35,38 +35,223 @@
   box-shadow: var(--shadow-sm);
 }
 
-.permission-groups,
-.permission-options {
-  display: grid;
-  gap: var(--space-16);
-}
-
-.permission-group {
-  padding: var(--space-16);
-}
-
-.permission-group-heading,
 .inline-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-12);
+  gap: var(--space-3);
 }
 
-.permission-group-heading h3 {
-  margin: 0;
+.permission-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  background: var(--pastel-primary);
+  border-radius: var(--radius);
+}
+
+.permission-summary h3,
+.permission-summary p {
+  margin: var(--space-1) 0 0;
+}
+
+.permission-summary p {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.permission-count {
+  flex: 0 0 auto;
+  min-width: 110px;
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: center;
+}
+
+.permission-count strong,
+.permission-count span {
+  display: block;
+}
+
+.permission-count strong {
+  color: var(--primary);
+  font-size: 22px;
+}
+
+.permission-count span,
+.permission-group-toggle small,
+.permission-select-all small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.permission-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.permission-toolbar app-search,
+.permission-toolbar .search-field {
+  width: 100%;
+}
+
+.permission-toolbar .select-control {
+  width: auto;
+  min-width: 160px;
+}
+
+.permission-bulk-actions,
+.permission-group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.permission-bulk-actions {
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+}
+
+.permission-select-all span,
+.permission-option span {
+  min-width: 0;
+}
+
+.permission-select-all strong,
+.permission-select-all small,
+.permission-option strong,
+.permission-option small,
+.permission-option code {
+  display: block;
+}
+
+.permission-expand-actions,
+.permission-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.permission-expand-actions {
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  gap: var(--space-1);
+}
+
+.permission-utility-button {
+  min-height: 36px;
+  padding-inline: var(--space-3);
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.permission-utility-button:hover:not(:disabled),
+.permission-utility-button:focus-visible {
+  border-color: color-mix(in srgb, var(--primary) 22%, var(--border));
+  color: var(--primary);
+}
+
+.permission-groups {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.permission-group {
+  padding: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.permission-group-heading {
+  min-height: 68px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--background);
+  border-bottom: 1px solid transparent;
+}
+
+.permission-group:has(.permission-options) .permission-group-heading {
+  border-bottom-color: var(--border);
+}
+
+.permission-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.permission-group-toggle > span {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.permission-group-toggle app-icon {
+  flex: 0 0 auto;
+  transition: transform 0.18s ease;
+}
+
+.permission-group-toggle app-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.permission-module-all {
+  flex: 0 0 auto;
 }
 
 .permission-options {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: var(--space-16);
+  gap: var(--space-3);
+  padding: var(--space-4);
 }
 
-.permission-options .checkbox-label {
+.permission-option {
   align-items: flex-start;
-  padding: var(--space-12);
+  min-width: 0;
+  padding: var(--space-3);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.permission-option:hover,
+.permission-option:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  background: var(--pastel-primary);
+}
+
+.permission-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: var(--pastel-primary);
+}
+
+.permission-option:has(input:disabled) {
+  cursor: default;
+  opacity: 0.78;
 }
 
 .permission-options small,
@@ -74,6 +259,13 @@
   display: block;
   margin-top: 0.25rem;
   color: var(--text-secondary);
+}
+
+.permission-option code {
+  margin-top: var(--space-2);
+  color: var(--muted);
+  font-size: 10px;
+  overflow-wrap: anywhere;
 }
 
 .access-denied {
@@ -87,8 +279,60 @@
 }
 
 @media (max-width: 640px) {
+  .permission-summary,
+  .permission-bulk-actions,
+  .permission-group-heading {
+    align-items: flex-start;
+  }
+
+  .permission-summary,
+  .permission-bulk-actions {
+    flex-direction: column;
+  }
+
+  .permission-count {
+    width: 100%;
+  }
+
+  .permission-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .permission-toolbar .select-control {
+    width: 100%;
+  }
+
+  .permission-toolbar .permission-utility-button,
+  .permission-expand-actions {
+    width: 100%;
+  }
+
+  .permission-expand-actions .permission-utility-button {
+    flex: 1 1 50%;
+  }
+
+  .permission-group-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .permission-options {
     grid-template-columns: 1fr;
+  }
+
+  .permission-actions {
+    flex-direction: column-reverse;
+  }
+
+  .permission-actions .button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .permission-group-toggle app-icon,
+  .permission-option {
+    transition: none;
   }
 }
 .stat-card.primary {

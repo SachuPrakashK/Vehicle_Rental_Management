@@ -80,16 +80,24 @@ export async function updateAdminUser(
     lastName: string;
     email: string;
     phone: string | null;
-    role: UserRole;
     isActive: boolean;
   },
+  client?: Queryable,
 ): Promise<UserRecord | undefined> {
   return (
-    await pool.query<UserRecord>(
-      'UPDATE users SET first_name=$2,last_name=$3,email=$4,phone=$5,role=$6,is_active=$7,updated_at=now() WHERE id=$1 RETURNING *',
-      [id, data.firstName, data.lastName, data.email, data.phone, data.role, data.isActive],
+    await db(client).query<UserRecord>(
+      'UPDATE users SET first_name=$2,last_name=$3,email=$4,phone=$5,is_active=$6,updated_at=now() WHERE id=$1 RETURNING *',
+      [id, data.firstName, data.lastName, data.email, data.phone, data.isActive],
     )
   ).rows[0];
+}
+
+export async function updateLegacyRole(
+  id: string,
+  role: UserRole,
+  client?: Queryable,
+): Promise<void> {
+  await db(client).query('UPDATE users SET role=$2,updated_at=now() WHERE id=$1', [id, role]);
 }
 export async function deleteUser(id: string): Promise<boolean> {
   return (await pool.query('DELETE FROM users WHERE id=$1', [id])).rowCount === 1;

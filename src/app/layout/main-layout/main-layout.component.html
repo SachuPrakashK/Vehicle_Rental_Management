@@ -83,7 +83,7 @@
             </span>
             <span class="profile-name">
               {{ auth.user()?.firstName }} {{ auth.user()?.lastName }}
-              <small>{{ auth.user()?.role }}</small>
+              <small>{{ roleLabel() }}</small>
             </span>
             <app-icon name="chevron"></app-icon>
           </button>

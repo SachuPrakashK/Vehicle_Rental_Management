@@ -7,16 +7,28 @@ const db = (client?: Queryable): Queryable => client ?? pool;
 
 export async function effectivePermissions(userId: string, client?: Queryable): Promise<string[]> {
   const result = await db(client).query<{ code: string }>(
-    `SELECT DISTINCT p.code
-       FROM user_roles ur
+    `SELECT DISTINCT granted.code FROM (
+       SELECT p.code FROM user_roles ur
        JOIN roles r ON r.id=ur.role_id AND r.is_active=true
        JOIN role_permissions rp ON rp.role_id=r.id
        JOIN permissions p ON p.id=rp.permission_id
-      WHERE ur.user_id=$1
-      ORDER BY p.code`,
+       WHERE ur.user_id=$1
+       UNION ALL
+       SELECT p.code FROM permissions p
+       JOIN users u ON u.id=$1 AND u.is_active=true AND u.role='SUPER_ADMIN'
+     ) granted ORDER BY granted.code`,
     [userId],
   );
   return result.rows.map((row) => row.code);
+}
+
+export async function assignableRoles(client?: Queryable): Promise<RoleSummary[]> {
+  return (
+    await db(client).query<RoleSummary>(
+      `SELECT id,name,code FROM roles
+       WHERE is_active=true ORDER BY is_system_role DESC,name`,
+    )
+  ).rows;
 }
 
 export async function userRoles(userId: string, client?: Queryable): Promise<RoleSummary[]> {
@@ -176,15 +188,18 @@ export async function deleteRole(id: string): Promise<boolean> {
   }
 }
 
-export async function audit(data: {
-  actorId: string;
-  targetUserId?: string;
-  targetRoleId?: string;
-  action: string;
-  before?: unknown;
-  after?: unknown;
-}): Promise<void> {
-  await pool.query(
+export async function audit(
+  data: {
+    actorId: string;
+    targetUserId?: string;
+    targetRoleId?: string;
+    action: string;
+    before?: unknown;
+    after?: unknown;
+  },
+  client?: Queryable,
+): Promise<void> {
+  await db(client).query(
     `INSERT INTO authorization_audit_logs(actor_user_id,target_user_id,target_role_id,action,before_state,after_state)
      VALUES($1,$2,$3,$4,$5,$6)`,
     [
