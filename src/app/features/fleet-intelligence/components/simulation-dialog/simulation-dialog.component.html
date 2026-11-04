@@ -21,7 +21,7 @@
         ><span>This will never be presented as live GPS data.</span>
       </div>
       <label class="field full"
-        ><span>Vehicle <b>*</b></span
+        ><span>Vehicle <span class="required">*</span></span
         ><select formControlName="vehicleId">
           <option value="">Select vehicle</option>
           @for (vehicle of vehicles(); track vehicle.carId) {
@@ -31,10 +31,10 @@
           }
         </select></label
       ><label class="field"
-        ><span>Latitude <b>*</b></span
+        ><span>Latitude <span class="required">*</span></span
         ><input type="number" step="0.000001" formControlName="latitude" /></label
       ><label class="field"
-        ><span>Longitude <b>*</b></span
+        ><span>Longitude <span class="required">*</span></span
         ><input type="number" step="0.000001" formControlName="longitude" /></label
       ><label class="field full"
         ><span>Speed (km/h)</span><input type="number" formControlName="speed"

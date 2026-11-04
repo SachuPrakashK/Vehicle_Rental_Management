@@ -33,7 +33,7 @@
           </div>
         </div>
         <label class="field"
-          ><span>Vehicle <b>*</b></span>
+          ><span>Vehicle <span class="required">*</span></span>
           @if (editingRecord(); as record) {
             <input [value]="record.registrationNumber" readonly />
           } @else {
@@ -51,14 +51,14 @@
           }
         </label>
         <label class="field"
-          ><span>Maintenance type <b>*</b></span
+          ><span>Maintenance type <span class="required">*</span></span
           ><input formControlName="maintenanceType" placeholder="Enter maintenance type" />
           @if (form().get('maintenanceType')?.touched && form().get('maintenanceType')?.invalid) {
             <small class="field-error">Enter the maintenance type.</small>
           }
         </label>
         <label class="field full"
-          ><span>Description <b>*</b></span
+          ><span>Description <span class="required">*</span></span
           ><textarea
             formControlName="description"
             placeholder="Enter service requirements"
@@ -68,7 +68,7 @@
           }
         </label>
         <label class="field"
-          ><span>Scheduled date <b>*</b></span
+          ><span>Scheduled date <span class="required">*</span></span
           ><app-date-picker
             formControlName="scheduledDate"
             ariaLabel="Select scheduled maintenance date"
@@ -79,7 +79,7 @@
           }
         </label>
         <label class="field"
-          ><span>Odometer reading <b>*</b></span>
+          ><span>Odometer reading <span class="required">*</span></span>
           <div class="input-suffix">
             <input
               type="number"
@@ -112,7 +112,7 @@
           ><span>Service provider</span
           ><input formControlName="serviceProvider" placeholder="Enter service provider" /></label
         ><label class="field"
-          ><span>Status <b>*</b></span
+          ><span>Status <span class="required">*</span></span
           ><select formControlName="status">
             <option value="SCHEDULED">Scheduled</option>
             <option value="DUE">Due</option>
